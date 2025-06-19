@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: levisty
+    env: node
+    plan: free
+    buildCommand: |
+      # Install Node.js dependencies
+      npm install
+      
+      # Install Python and required packages
+      apt-get update
+      apt-get install -y python3 python3-pip python3-venv
+      
+      # Create Python virtual environment
+      python3 -m venv venv
+      source venv/bin/activate
+      
+      # Install Python dependencies
+      pip install --upgrade pip
+      pip install pytube yt-dlp
+      
+      # Make Python scripts executable
+      chmod +x search.py
+      chmod +x stream.py
+    startCommand: node server.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        fromService:
+          type: web
+          name: levisty
+          property: port
+    autoDeploy: true
+    branch: main
+    rootDir: .
+    
+    # Persistent storage for Python virtual environment
+    disk:
+      name: python-venv
+      mountPath: /opt/render/project/src/venv
+      sizeGB: 1 
