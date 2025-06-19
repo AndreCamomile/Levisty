@@ -31,8 +31,8 @@ app.post('/search', async (req, res) => {
             return res.status(400).json({ error: 'Query is required' });
         }
 
-        // Use Python from virtual environment
-        const pythonProcess = spawn(path.join(__dirname, 'venv/bin/python3'), ['search.py', query]);
+        // Use system Python
+        const pythonProcess = spawn('python3', ['search.py', query]);
         let result = '';
         let error = '';
 
