@@ -2157,7 +2157,7 @@
             <button class="playlist-details-close">
                 <span class="material-icons">close</span>
             </button>
-            <button class="playlist-details-menu" onclick="togglePlaylistMenu(event)">
+            <button class="playlist-details-menu" onclick="togglePlaylistMenu(event)" style="display: none;">
                 <span class="material-icons">more_vert</span>
                 <div class="playlist-menu-dropdown">
                     <div class="playlist-menu-item refresh" onclick="refreshPlaylist(event)" style="display: none;">
@@ -3700,13 +3700,19 @@
 
             // Store current playlist data for menu functions
             modal.setAttribute('data-playlist-id', playlist.id);
+            currentPlaylistForMenu = playlist;
 
-            // Show/hide refresh button based on playlist type
+            // Show/hide refresh button based on playlist type (for web fallback)
             const refreshButton = modal.querySelector('.playlist-menu-item.refresh');
             if (playlist.isYouTube && playlist.originalUrl) {
                 refreshButton.style.display = 'flex';
             } else {
                 refreshButton.style.display = 'none';
+            }
+
+            // Setup Telegram menu if available
+            if (window.Telegram?.WebApp) {
+                setupTelegramPlaylistMenu(playlist);
             }
 
             // Set cover - simplified and fixed logic
@@ -3787,6 +3793,8 @@
                 // Hide dropdown if open
                 const dropdown = modal.querySelector('.playlist-menu-dropdown');
                 dropdown.classList.remove('active');
+                // Clear Telegram menu
+                clearTelegramPlaylistMenu();
             };
 
             // Close on click outside
@@ -3796,6 +3804,8 @@
                     // Hide dropdown if open
                     const dropdown = modal.querySelector('.playlist-menu-dropdown');
                     dropdown.classList.remove('active');
+                    // Clear Telegram menu
+                    clearTelegramPlaylistMenu();
                 }
             };
         }
@@ -4133,6 +4143,223 @@
             }, delay);
         }
 
+        // Telegram playlist menu functions
+        function setupTelegramPlaylistMenu(playlist) {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+
+            // Clear any existing menu
+            clearTelegramPlaylistMenu();
+
+            // Create menu items
+            const menuItems = [];
+
+            // Add refresh button for YouTube playlists
+            if (playlist.isYouTube && playlist.originalUrl) {
+                menuItems.push({
+                    id: 'refresh',
+                    text: '🔄 Refresh Playlist'
+                });
+            }
+
+            // Always add delete button
+            menuItems.push({
+                id: 'delete',
+                text: '🗑️ Delete Playlist'
+            });
+
+            // Show settings button with menu
+            if (menuItems.length > 0) {
+                tg.SettingsButton.show();
+                tg.SettingsButton.onClick(() => {
+                    showTelegramPlaylistMenu(menuItems, playlist);
+                });
+            }
+        }
+
+        function clearTelegramPlaylistMenu() {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+
+            tg.SettingsButton.hide();
+            tg.SettingsButton.offClick();
+            currentPlaylistForMenu = null;
+        }
+
+        function showTelegramPlaylistMenu(menuItems, playlist) {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+
+            // Create action sheet style menu
+            let menuText = `Playlist: ${playlist.name}\n\nChoose an action:`;
+            
+            menuItems.forEach((item, index) => {
+                menuText += `\n${index + 1}. ${item.text}`;
+            });
+
+            // Show confirmation dialog with options
+            tg.showConfirm(menuText, (confirmed) => {
+                if (confirmed) {
+                    // For now, show another dialog to select action
+                    showTelegramActionSelector(menuItems, playlist);
+                }
+            });
+        }
+
+        function showTelegramActionSelector(menuItems, playlist) {
+            const tg = window.Telegram?.WebApp;
+            if (!tg) return;
+
+            // Create buttons text
+            let buttonsText = 'Select action:\n\n';
+            menuItems.forEach((item, index) => {
+                buttonsText += `${index + 1} - ${item.text}\n`;
+            });
+
+            tg.showPopup({
+                title: 'Playlist Actions',
+                message: buttonsText,
+                buttons: [
+                    ...menuItems.map((item, index) => ({
+                        id: item.id,
+                        type: item.id === 'delete' ? 'destructive' : 'default',
+                        text: `${index + 1}`
+                    })),
+                    {id: 'cancel', type: 'cancel', text: 'Cancel'}
+                ]
+            }, (buttonId) => {
+                handleTelegramPlaylistAction(buttonId, playlist);
+            });
+        }
+
+        async function handleTelegramPlaylistAction(actionId, playlist) {
+            const tg = window.Telegram?.WebApp;
+            
+            switch (actionId) {
+                case 'refresh':
+                    if (playlist.isYouTube && playlist.originalUrl) {
+                        // Show confirmation
+                        tg.showConfirm(`Refresh "${playlist.name}" playlist? This will update the tracks with the latest content from YouTube.`, async (confirmed) => {
+                            if (confirmed) {
+                                await handleTelegramRefreshPlaylist(playlist);
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'delete':
+                    tg.showConfirm(`Are you sure you want to delete "${playlist.name}" playlist?`, (confirmed) => {
+                        if (confirmed) {
+                            handleTelegramDeletePlaylist(playlist);
+                        }
+                    });
+                    break;
+                    
+                case 'cancel':
+                default:
+                    // Do nothing
+                    break;
+            }
+        }
+
+        async function handleTelegramRefreshPlaylist(playlist) {
+            const tg = window.Telegram?.WebApp;
+            
+            try {
+                // Show loading
+                tg.showAlert('🔄 Refreshing playlist...');
+                
+                // Get playlists from storage
+                const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
+                
+                // Call refresh endpoint
+                const response = await fetch('/refresh-playlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        playlistUrl: playlist.originalUrl,
+                        playlistId: playlist.id
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to refresh playlist');
+                }
+
+                const refreshedData = await response.json();
+                
+                // Update the playlist in local storage
+                const playlistIndex = playlists.findIndex(p => p.id == playlist.id);
+                if (playlistIndex !== -1) {
+                    // Preserve original playlist properties but update content
+                    playlists[playlistIndex] = {
+                        ...playlists[playlistIndex],
+                        name: refreshedData.name,
+                        description: refreshedData.description,
+                        tracks: refreshedData.tracks,
+                        lastRefresh: refreshedData.lastRefresh,
+                        cover: playlists[playlistIndex].cover || {
+                            type: 'image',
+                            url: refreshedData.coverImage || refreshedData.tracks[0]?.thumbnail || ''
+                        }
+                    };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('playlists', JSON.stringify(playlists));
+                    
+                    // Update UI
+                    updatePlaylistsList();
+                    
+                    // Close modal
+                    const modal = document.querySelector('.playlist-details-modal');
+                    modal.classList.remove('active');
+                    clearTelegramPlaylistMenu();
+                    
+                    // Show success
+                    tg.showAlert(`✅ "${refreshedData.name}" updated with ${refreshedData.tracks.length} tracks!`);
+                    
+                    console.log(`✅ Successfully refreshed playlist: ${refreshedData.name} (${refreshedData.tracks.length} tracks)`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Error refreshing playlist:', error);
+                tg.showAlert(`❌ Failed to refresh playlist: ${error.message}`);
+            }
+        }
+
+        function handleTelegramDeletePlaylist(playlist) {
+            const tg = window.Telegram?.WebApp;
+            
+            try {
+                // Get existing playlists
+                const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
+                
+                // Filter out the playlist to delete
+                const updatedPlaylists = playlists.filter(p => p.id != playlist.id);
+                
+                // Update localStorage
+                localStorage.setItem('playlists', JSON.stringify(updatedPlaylists));
+                
+                // Update UI
+                updatePlaylistsList();
+                
+                // Close modal
+                const modal = document.querySelector('.playlist-details-modal');
+                modal.classList.remove('active');
+                clearTelegramPlaylistMenu();
+                
+                // Show success
+                tg.showAlert(`✅ "${playlist.name}" deleted successfully`);
+                
+            } catch (error) {
+                console.error('❌ Error deleting playlist:', error);
+                tg.showAlert(`❌ Failed to delete playlist: ${error.message}`);
+            }
+        }
+
 
 
     </script>
@@ -4141,6 +4368,9 @@
     <script>
         // Initialize Telegram WebApp
         const tg = window.Telegram?.WebApp;
+        
+        // Global variable to store current playlist for menu actions
+        let currentPlaylistForMenu = null;
         
         if (tg) {
             // Expand the web app to full height
@@ -4177,6 +4407,7 @@
                     }, 300);
                 } else if (playlistModal.classList.contains('active')) {
                     playlistModal.classList.remove('active');
+                    clearTelegramPlaylistMenu();
                 } else if (libraryPage.classList.contains('active')) {
                     // Switch to home page
                     document.querySelector('.nav-button[data-section="home"]').click();
