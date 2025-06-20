@@ -1907,6 +1907,14 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
+        .playlist-menu-item.refresh {
+            color: #007aff;
+        }
+
+        .playlist-menu-item.refresh:hover {
+            background: rgba(0, 122, 255, 0.1);
+        }
+
         .playlist-menu-item.delete {
             color: #ff3b30;
         }
@@ -2152,6 +2160,10 @@
             <button class="playlist-details-menu" onclick="togglePlaylistMenu(event)">
                 <span class="material-icons">more_vert</span>
                 <div class="playlist-menu-dropdown">
+                    <div class="playlist-menu-item refresh" onclick="refreshPlaylist(event)" style="display: none;">
+                        <span class="material-icons">refresh</span>
+                        Refresh Playlist
+                    </div>
                     <div class="playlist-menu-item delete" onclick="deletePlaylist(event)">
                         <span class="material-icons">delete</span>
                         Delete Playlist
@@ -3689,6 +3701,14 @@
             // Store current playlist data for menu functions
             modal.setAttribute('data-playlist-id', playlist.id);
 
+            // Show/hide refresh button based on playlist type
+            const refreshButton = modal.querySelector('.playlist-menu-item.refresh');
+            if (playlist.isYouTube && playlist.originalUrl) {
+                refreshButton.style.display = 'flex';
+            } else {
+                refreshButton.style.display = 'none';
+            }
+
             // Set cover - simplified and fixed logic
             console.log('Playlist object:', playlist);
             console.log('Playlist cover:', playlist.cover);
@@ -3822,7 +3842,92 @@
                 dropdown.classList.remove('active');
                 
                 // Show success message
-                showSuccessMessage('Playlist deleted successfully');
+                showRefreshNotification('✅ Playlist deleted successfully', 'success');
+            }
+        }
+
+        async function refreshPlaylist(event) {
+            event.stopPropagation();
+            
+            const modal = document.querySelector('.playlist-details-modal');
+            const playlistId = modal.getAttribute('data-playlist-id');
+            
+            // Get the playlist data
+            const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
+            const playlist = playlists.find(p => p.id == playlistId);
+            
+            if (!playlist) {
+                showRefreshNotification('❌ Playlist not found', 'error');
+                return;
+            }
+            
+            if (!playlist.isYouTube || !playlist.originalUrl) {
+                showRefreshNotification('❌ Only YouTube playlists can be refreshed', 'error');
+                return;
+            }
+            
+            if (confirm(`Refresh "${playlist.name}" playlist? This will update the tracks with the latest content from YouTube.`)) {
+                try {
+                    // Show loading notification
+                    showRefreshNotification(`🔄 Refreshing "${playlist.name}"...`, 'info');
+                    
+                    // Close dropdown and modal
+                    const dropdown = modal.querySelector('.playlist-menu-dropdown');
+                    dropdown.classList.remove('active');
+                    modal.classList.remove('active');
+                    
+                    // Call refresh endpoint
+                    const response = await fetch('/refresh-playlist', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            playlistUrl: playlist.originalUrl,
+                            playlistId: playlist.id
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to refresh playlist');
+                    }
+
+                    const refreshedData = await response.json();
+                    
+                    // Update the playlist in local storage
+                    const playlistIndex = playlists.findIndex(p => p.id == playlistId);
+                    if (playlistIndex !== -1) {
+                        // Preserve original playlist properties but update content
+                        playlists[playlistIndex] = {
+                            ...playlists[playlistIndex],
+                            name: refreshedData.name,
+                            description: refreshedData.description,
+                            tracks: refreshedData.tracks,
+                            lastRefresh: refreshedData.lastRefresh,
+                            // Keep original cover if user customized it, otherwise use new one
+                            cover: playlists[playlistIndex].cover || {
+                                type: 'image',
+                                url: refreshedData.coverImage || refreshedData.tracks[0]?.thumbnail || ''
+                            }
+                        };
+                        
+                        // Save to localStorage
+                        localStorage.setItem('playlists', JSON.stringify(playlists));
+                        
+                        // Update UI
+                        updatePlaylistsList();
+                        
+                        // Show success message
+                        showRefreshNotification(`✅ "${refreshedData.name}" updated with ${refreshedData.tracks.length} tracks!`, 'success');
+                        
+                        console.log(`✅ Successfully refreshed playlist: ${refreshedData.name} (${refreshedData.tracks.length} tracks)`);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Error refreshing playlist:', error);
+                    showRefreshNotification(`❌ Failed to refresh playlist: ${error.message}`, 'error');
+                }
             }
         }
 
@@ -3967,119 +4072,7 @@
             console.log('Shuffle mode:', isShuffleMode);
         }
 
-        // Playlist refresh functionality
-        async function checkAndRefreshPlaylists() {
-            try {
-                console.log('🔍 Checking playlists for updates...');
-                const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
-                
-                if (playlists.length === 0) {
-                    console.log('No playlists to check');
-                    return;
-                }
 
-                // Filter only YouTube playlists
-                const youtubePlaylists = playlists.filter(p => p.isYouTube && p.originalUrl);
-                
-                if (youtubePlaylists.length === 0) {
-                    console.log('No YouTube playlists to refresh');
-                    return;
-                }
-
-                console.log(`Found ${youtubePlaylists.length} YouTube playlists to check`);
-
-                // Check which playlists need refresh
-                const response = await fetch('/check-playlist-updates', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ playlists: youtubePlaylists })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to check playlist updates');
-                }
-
-                const checkResult = await response.json();
-                console.log('📊 Playlist check result:', checkResult.summary);
-
-                const playlistsToRefresh = checkResult.results.filter(r => r.needsRefresh);
-                
-                if (playlistsToRefresh.length === 0) {
-                    console.log('✅ All playlists are up to date');
-                    return;
-                }
-
-                console.log(`🔄 Refreshing ${playlistsToRefresh.length} playlists...`);
-
-                // Show refresh notification
-                showRefreshNotification(`Updating ${playlistsToRefresh.length} playlist${playlistsToRefresh.length > 1 ? 's' : ''}...`);
-
-                // Refresh playlists one by one
-                let refreshedCount = 0;
-                for (const playlistInfo of playlistsToRefresh) {
-                    try {
-                        const originalPlaylist = playlists.find(p => p.id === playlistInfo.id);
-                        if (!originalPlaylist) continue;
-
-                        console.log(`🔄 Refreshing: ${originalPlaylist.name}`);
-
-                        const refreshResponse = await fetch('/refresh-playlist', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({ 
-                                playlistUrl: playlistInfo.url,
-                                playlistId: playlistInfo.id
-                            })
-                        });
-
-                        if (refreshResponse.ok) {
-                            const refreshedData = await refreshResponse.json();
-                            
-                            // Update the playlist in local storage
-                            const playlistIndex = playlists.findIndex(p => p.id === playlistInfo.id);
-                            if (playlistIndex !== -1) {
-                                // Preserve original playlist properties
-                                playlists[playlistIndex] = {
-                                    ...playlists[playlistIndex],
-                                    name: refreshedData.name,
-                                    description: refreshedData.description,
-                                    tracks: refreshedData.tracks,
-                                    lastRefresh: refreshedData.lastRefresh,
-                                    cover: playlists[playlistIndex].cover || {
-                                        type: 'image',
-                                        url: refreshedData.coverImage || refreshedData.tracks[0]?.thumbnail || ''
-                                    }
-                                };
-                                refreshedCount++;
-                                console.log(`✅ Refreshed: ${refreshedData.name} (${refreshedData.tracks.length} tracks)`);
-                            }
-                        } else {
-                            console.warn(`⚠️ Failed to refresh: ${originalPlaylist.name}`);
-                        }
-                    } catch (error) {
-                        console.error(`❌ Error refreshing playlist ${playlistInfo.id}:`, error);
-                    }
-                }
-
-                // Save updated playlists
-                if (refreshedCount > 0) {
-                    localStorage.setItem('playlists', JSON.stringify(playlists));
-                    updatePlaylistsList(); // Refresh UI
-                    console.log(`🎉 Successfully refreshed ${refreshedCount} playlists`);
-                    
-                    // Show success notification
-                    showRefreshNotification(`✅ Updated ${refreshedCount} playlist${refreshedCount > 1 ? 's' : ''}!`, 'success');
-                }
-
-            } catch (error) {
-                console.error('💥 Error checking/refreshing playlists:', error);
-                showRefreshNotification('❌ Failed to update playlists', 'error');
-            }
-        }
 
         function showRefreshNotification(message, type = 'info') {
             // Remove any existing notification
@@ -4140,24 +4133,7 @@
             }, delay);
         }
 
-        // Auto-refresh playlists on app start
-        document.addEventListener('DOMContentLoaded', () => {
-            // Delay the check to allow UI to load first
-            setTimeout(() => {
-                checkAndRefreshPlaylists();
-            }, 2000); // 2 second delay after page load
-        });
 
-        // Also check when app becomes visible (user returns to app)
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                console.log('App became visible, checking for playlist updates...');
-                // Small delay to avoid conflicts with audio resume
-                setTimeout(() => {
-                    checkAndRefreshPlaylists();
-                }, 1000);
-            }
-        });
 
     </script>
 

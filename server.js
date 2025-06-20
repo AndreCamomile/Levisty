@@ -411,62 +411,7 @@ app.post('/refresh-playlist', async (req, res) => {
     }
 });
 
-// Check playlists that need refresh endpoint
-app.post('/check-playlist-updates', async (req, res) => {
-    try {
-        const { playlists } = req.body;
-        console.log('🔍 Checking', playlists.length, 'playlists for updates...');
 
-        if (!playlists || !Array.isArray(playlists)) {
-            return res.status(400).json({ error: 'Playlists array is required' });
-        }
-
-        const results = [];
-        const now = new Date();
-        const REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-        for (const playlist of playlists) {
-            if (!playlist.isYouTube || !playlist.originalUrl) {
-                // Skip non-YouTube playlists or those without URL
-                results.push({
-                    id: playlist.id,
-                    needsRefresh: false,
-                    reason: 'Not a YouTube playlist or missing URL'
-                });
-                continue;
-            }
-
-            const lastRefresh = playlist.lastRefresh ? new Date(playlist.lastRefresh) : null;
-            const needsRefresh = !lastRefresh || (now - lastRefresh) > REFRESH_INTERVAL;
-
-            results.push({
-                id: playlist.id,
-                needsRefresh,
-                reason: needsRefresh ? 
-                    (lastRefresh ? 'Last refreshed more than 24 hours ago' : 'Never refreshed') : 
-                    'Recently refreshed',
-                lastRefresh: playlist.lastRefresh,
-                url: playlist.originalUrl
-            });
-        }
-
-        const needsRefreshCount = results.filter(r => r.needsRefresh).length;
-        console.log('📊 Playlist check results:', needsRefreshCount, 'need refresh out of', results.length);
-
-        res.json({
-            results,
-            summary: {
-                total: results.length,
-                needsRefresh: needsRefreshCount,
-                upToDate: results.length - needsRefreshCount
-            }
-        });
-
-    } catch (error) {
-        console.error('💥 Playlist check error:', error);
-        res.status(500).json({ error: 'Failed to check playlist updates' });
-    }
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
