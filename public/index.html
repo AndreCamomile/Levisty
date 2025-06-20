@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Levisty</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -2301,7 +2304,11 @@
         </button>
     </div>
 
-    <audio id="audio-player" style="display: none;"></audio>
+            <audio id="audio-player" style="display: none;" preload="auto" 
+               controls="false" 
+               crossorigin="anonymous"
+               playsinline="true"
+               webkit-playsinline="true"></audio>
 
     <div class="playlist-modal" id="playlistModal">
         <div class="playlist-modal-content">
@@ -2405,18 +2412,37 @@
             console.error('YouTube player error:', event.data);
         }
 
+        // Track if pause was user-initiated
+        let userInitiatedPause = false;
+        
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
                 isPlaying = false;
                 updatePlayPauseButtons(false);
                 document.querySelector('.video-background').classList.remove('active');
+                playNextTrack(); // Auto-play next track
             } else if (event.data === YT.PlayerState.PLAYING) {
                 isPlaying = true;
+                userInitiatedPause = false;
                 updatePlayPauseButtons(true);
                 document.querySelector('.video-background').classList.add('active');
             } else if (event.data === YT.PlayerState.PAUSED) {
                 isPlaying = false;
                 updatePlayPauseButtons(false);
+                // If app is hidden and pause wasn't user-initiated, try to resume
+                if (document.hidden && !userInitiatedPause) {
+                    console.log('Video paused due to app being hidden, trying to resume...');
+                    setTimeout(() => {
+                        if (player && document.hidden) {
+                            try {
+                                player.playVideo();
+                                console.log('Successfully resumed video playback');
+                            } catch (e) {
+                                console.log('Failed to resume video:', e);
+                            }
+                        }
+                    }, 500);
+                }
             }
         }
 
@@ -2707,8 +2733,10 @@
             
             try {
                 if (isPlaying) {
+                    userInitiatedPause = true; // Mark as user-initiated pause
                     player.pauseVideo();
                 } else {
+                    userInitiatedPause = false; // User wants to play
                     player.playVideo();
                 }
             } catch (error) {
@@ -4035,8 +4063,51 @@
             // Initial back button state
             updateBackButton();
             
+            // Prevent audio pause when app goes to background
+            document.addEventListener('visibilitychange', function() {
+                console.log('Visibility changed:', document.hidden ? 'hidden' : 'visible');
+                // Don't pause audio when app goes to background
+                if (document.hidden && currentAudio && !currentAudio.paused) {
+                    console.log('App went to background, keeping audio playing');
+                    // Force audio to continue playing
+                    setTimeout(() => {
+                        if (currentAudio && currentAudio.paused) {
+                            currentAudio.play().catch(e => console.log('Auto-resume failed:', e));
+                        }
+                    }, 100);
+                }
+            });
+            
+            // Handle page focus/blur events
+            window.addEventListener('focus', function() {
+                console.log('App gained focus');
+                // Optionally resume if paused
+            });
+            
+            window.addEventListener('blur', function() {
+                console.log('App lost focus');
+                // Keep playing when losing focus
+            });
+            
+            // Handle Telegram-specific events
+            tg.onEvent('viewportChanged', function() {
+                console.log('Telegram viewport changed, keeping audio active');
+            });
+            
         } else {
             console.log('Not running in Telegram WebApp environment');
+            
+            // For non-Telegram environments, still handle visibility changes
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden && currentAudio && !currentAudio.paused) {
+                    console.log('Tab hidden, keeping audio playing');
+                    setTimeout(() => {
+                        if (currentAudio && currentAudio.paused) {
+                            currentAudio.play().catch(e => console.log('Auto-resume failed:', e));
+                        }
+                    }, 100);
+                }
+            });
         }
     </script>
 </body>
