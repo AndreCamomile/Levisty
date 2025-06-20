@@ -3979,15 +3979,11 @@
             console.log('Init data:', tg.initData);
             console.log('User data:', tg.initDataUnsafe.user);
             
-            // Set main button if needed
-            tg.MainButton.text = "Close App";
-            tg.MainButton.show();
-            tg.MainButton.onClick(() => {
-                tg.close();
-            });
+            // Hide the main button (Close App button)
+            tg.MainButton.hide();
             
-            // Enable closing confirmation
-            tg.enableClosingConfirmation();
+            // Disable closing confirmation (optional - removes "Are you sure?" dialog)
+            tg.disableClosingConfirmation();
             
             // Set theme colors to match app design
             tg.setHeaderColor('#000000');
