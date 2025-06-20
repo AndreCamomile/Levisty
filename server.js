@@ -133,51 +133,113 @@ app.post('/import-playlist', async (req, res) => {
         let playlistId;
         try {
             console.log('Extracting playlist ID from URL...');
-            playlistId = await ytpl.getPlaylistID(url);
-            console.log('Extracted playlist ID:', playlistId);
+            
+            // Manual extraction as backup for ytpl.getPlaylistID
+            const urlPattern = /[&?]list=([^&]+)/;
+            const match = url.match(urlPattern);
+            if (match) {
+                playlistId = match[1];
+                console.log('Manually extracted playlist ID:', playlistId);
+            } else {
+                // Try ytpl method
+                playlistId = await ytpl.getPlaylistID(url);
+                console.log('YTPL extracted playlist ID:', playlistId);
+            }
         } catch (error) {
             console.error('Error extracting playlist ID:', error);
             return res.status(400).json({ error: 'Invalid playlist URL. Make sure the playlist is public and the URL is correct.' });
         }
 
-        // Get playlist info and items with more options
-        console.log('Fetching playlist data...');
-        const playlist = await ytpl(playlistId, {
-            limit: Infinity, // Get all items
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        // Try multiple methods to get playlist data
+        let formattedPlaylist;
+        
+        try {
+            // Method 1: Try ytpl library
+            console.log('Fetching playlist data with ytpl...');
+            const playlist = await ytpl(playlistId, {
+                limit: 50, // Limit to 50 items to avoid timeouts
+                requestOptions: {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    }
                 }
+            });
+
+            console.log('Playlist fetched with ytpl:', playlist?.title, 'Items:', playlist?.items?.length);
+
+            if (playlist && playlist.items && playlist.items.length > 0) {
+                formattedPlaylist = {
+                    id: playlist.id,
+                    name: playlist.title || 'Untitled Playlist',
+                    description: playlist.author?.name ? `by ${playlist.author.name}` : 'YouTube Playlist',
+                    isYouTube: true,
+                    author: playlist.author?.name || 'Unknown',
+                    coverImage: playlist?.bestThumbnail?.url || 
+                               playlist?.thumbnails?.[0]?.url || 
+                               (playlist.items?.[0]?.bestThumbnail?.url) || 
+                               (playlist.items?.[0]?.thumbnails?.[0]?.url) || null,
+                    tracks: playlist.items.map(item => ({
+                        id: item.id,
+                        title: item.title || 'Untitled',
+                        thumbnail: item?.bestThumbnail?.url || item?.thumbnails?.[0]?.url || null,
+                        channel: item?.author?.name || 'Unknown Channel',
+                        duration: item.duration || 'Unknown'
+                    })).filter(track => track.id) // Filter out items without IDs
+                };
             }
-        });
+        } catch (ytplError) {
+            console.warn('ytpl failed, trying Python method:', ytplError.message);
+            
+            // Method 2: Use Python script as fallback
+            try {
+                console.log('Fetching playlist data with Python script...');
+                const pythonProcess = spawn('python3', ['playlist_import.py', url]);
+                let result = '';
+                let error = '';
 
-        console.log('Playlist fetched:', playlist?.title, 'Items:', playlist?.items?.length);
+                pythonProcess.stdout.on('data', (data) => {
+                    result += data.toString();
+                });
 
-        if (!playlist || !playlist.items || playlist.items.length === 0) {
+                pythonProcess.stderr.on('data', (data) => {
+                    error += data.toString();
+                    console.log('Python playlist import log:', data.toString());
+                });
+
+                await new Promise((resolve, reject) => {
+                    pythonProcess.on('close', (code) => {
+                        if (code === 0) {
+                            try {
+                                formattedPlaylist = JSON.parse(result);
+                                console.log('Playlist imported with Python:', formattedPlaylist.name, 'with', formattedPlaylist.tracks.length, 'tracks');
+                                resolve();
+                            } catch (parseError) {
+                                console.error('Failed to parse Python output:', parseError);
+                                reject(new Error('Failed to parse playlist data'));
+                            }
+                        } else {
+                            console.error('Python script failed with code:', code);
+                            console.error('Python error output:', error);
+                            reject(new Error('Python playlist import failed'));
+                        }
+                    });
+
+                    pythonProcess.on('error', (error) => {
+                        console.error('Failed to start Python process:', error);
+                        reject(new Error('Failed to start Python playlist import'));
+                    });
+                });
+            } catch (pythonError) {
+                console.error('Python method also failed:', pythonError.message);
+                throw new Error('Both ytpl and Python methods failed to import playlist');
+            }
+        }
+
+        if (!formattedPlaylist || !formattedPlaylist.tracks || formattedPlaylist.tracks.length === 0) {
             return res.status(404).json({ error: 'Playlist is empty or not found' });
         }
 
-        // Format the response with safer property access
-        const formattedPlaylist = {
-            id: playlist.id,
-            name: playlist.title || 'Untitled Playlist',
-            description: playlist.author?.name ? `by ${playlist.author.name}` : 'YouTube Playlist',
-            isYouTube: true,
-            author: playlist.author?.name || 'Unknown',
-            coverImage: playlist?.bestThumbnail?.url || 
-                       playlist?.thumbnails?.[0]?.url || 
-                       (playlist.items?.[0]?.bestThumbnail?.url) || 
-                       (playlist.items?.[0]?.thumbnails?.[0]?.url) || null,
-            tracks: playlist.items.map(item => ({
-                id: item.id,
-                title: item.title || 'Untitled',
-                thumbnail: item?.bestThumbnail?.url || item?.thumbnails?.[0]?.url || null,
-                channel: item?.author?.name || 'Unknown Channel',
-                duration: item.duration || 'Unknown'
-            })).filter(track => track.id) // Filter out items without IDs
-        };
-
-        console.log('Formatted playlist:', formattedPlaylist.name, 'with', formattedPlaylist.tracks.length, 'tracks');
+        console.log('Final formatted playlist:', formattedPlaylist.name, 'with', formattedPlaylist.tracks.length, 'tracks');
         res.json(formattedPlaylist);
     } catch (error) {
         console.error('Error importing playlist - Full error:', error);
