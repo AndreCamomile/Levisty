@@ -193,30 +193,10 @@
         }
 
         .full-player-close {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 100;
+            display: none; /* Hidden - using Telegram Back Button instead */
         }
 
-        .full-player-close:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .full-player-close .material-icons {
-            font-size: 24px;
-            transform: rotate(180deg);
-        }
+        /* Removed hover and icon styles for full-player-close as it's now hidden */
 
         .full-player-content {
             position: relative;
@@ -2851,7 +2831,7 @@
         // Full player functionality
         const miniPlayer = document.querySelector('.mini-player');
         const fullPlayer = document.querySelector('.full-player');
-        const closeButton = document.querySelector('.full-player-close');
+        // closeButton removed - using Telegram Back Button instead
         const fullPlayerPlayPause = document.getElementById('fullPlayerPlayPause');
 
         let startY = 0;
@@ -2906,13 +2886,7 @@
             isDragging = false;
         });
 
-        closeButton.addEventListener('click', () => {
-            fullPlayer.style.transform = 'translateY(calc(100% + 80px))';
-            fullPlayer.classList.add('closing');
-            setTimeout(() => {
-                fullPlayer.classList.remove('active', 'closing');
-            }, 300);
-        });
+        // Close button functionality moved to Telegram Back Button
 
         // Swipe down to close full player
         fullPlayer.addEventListener('touchstart', (e) => {
@@ -4025,7 +3999,12 @@
                 const playlistModal = document.querySelector('.playlist-details-modal');
                 
                 if (fullPlayer.classList.contains('active')) {
-                    fullPlayer.classList.remove('active');
+                    // Close full player with animation (same as original close button)
+                    fullPlayer.style.transform = 'translateY(calc(100% + 80px))';
+                    fullPlayer.classList.add('closing');
+                    setTimeout(() => {
+                        fullPlayer.classList.remove('active', 'closing');
+                    }, 300);
                 } else if (playlistModal.classList.contains('active')) {
                     playlistModal.classList.remove('active');
                 } else if (libraryPage.classList.contains('active')) {
