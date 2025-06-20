@@ -48,15 +48,14 @@ def get_playlist_with_ytdlp(url, playlist_id):
         
         print(f"📋 Playlist: {playlist_title} by {playlist_author}", file=sys.stderr)
         
-        # Get video list
+        # Get video list (all videos, no limit)
         videos_cmd = [
             'yt-dlp', '--flat-playlist', '--no-warnings',
             '--print', '%(id)s|||%(title)s|||%(uploader)s|||%(duration_string)s',
-            '--playlist-items', '1:50',  # Limit to 50 videos
             url
         ]
         
-        videos_result = subprocess.run(videos_cmd, capture_output=True, text=True, timeout=30)
+        videos_result = subprocess.run(videos_cmd, capture_output=True, text=True, timeout=60)  # Increased timeout for large playlists
         
         if videos_result.returncode != 0:
             raise Exception(f"yt-dlp failed: {videos_result.stderr}")
@@ -145,7 +144,8 @@ def get_playlist_with_direct_scraping(url, playlist_id):
         print(f"🎬 Found {len(video_matches)} videos", file=sys.stderr)
         
         tracks = []
-        for i, (video_id, title) in enumerate(video_matches[:50]):  # Limit to 50
+        # Remove the 50 limit - get all videos found
+        for i, (video_id, title) in enumerate(video_matches):
             if video_id and title:
                 track = {
                     'id': video_id,

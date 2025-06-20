@@ -310,7 +310,163 @@ app.get('/test-playlist', async (req, res) => {
     }
 });
 
+// Refresh playlist endpoint - updates an existing playlist
+app.post('/refresh-playlist', async (req, res) => {
+    try {
+        const { playlistUrl, playlistId } = req.body;
+        console.log('🔄 Refreshing playlist:', playlistId, 'URL:', playlistUrl);
 
+        if (!playlistUrl) {
+            console.error('❌ No URL provided for playlist refresh');
+            return res.status(400).json({ error: 'Playlist URL is required' });
+        }
+
+        if (!isValidYouTubeUrl(playlistUrl)) {
+            console.error('❌ Invalid YouTube URL for refresh:', playlistUrl);
+            return res.status(400).json({ error: 'Invalid YouTube URL' });
+        }
+
+        console.log('🎵 Starting playlist refresh...');
+        
+        const pythonProcess = spawn('python3', ['youtube_playlist.py', playlistUrl]);
+        let result = '';
+        let errorOutput = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            result += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+            // Log progress messages in real-time
+            const lines = data.toString().split('\n');
+            lines.forEach(line => {
+                if (line.trim()) {
+                    console.log('🔄 Refresh log:', line.trim());
+                }
+            });
+        });
+
+        const refreshedPlaylist = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+                pythonProcess.kill();
+                reject(new Error('Playlist refresh timed out after 60 seconds'));
+            }, 60000);
+
+            pythonProcess.on('close', (code) => {
+                clearTimeout(timeout);
+                
+                if (code === 0) {
+                    try {
+                        const playlist = JSON.parse(result);
+                        console.log('✅ Playlist refreshed successfully:', playlist.name, 'with', playlist.tracks.length, 'tracks');
+                        resolve(playlist);
+                    } catch (parseError) {
+                        console.error('❌ Failed to parse refreshed playlist data:', parseError);
+                        reject(new Error('Invalid playlist data received'));
+                    }
+                } else {
+                    console.error('❌ Playlist refresh failed with code:', code);
+                    console.error('Error output:', errorOutput);
+                    reject(new Error('Playlist refresh script failed'));
+                }
+            });
+
+            pythonProcess.on('error', (error) => {
+                clearTimeout(timeout);
+                console.error('❌ Failed to start playlist refresh process:', error);
+                reject(new Error('Failed to start playlist refresh: ' + error.message));
+            });
+        });
+
+        // Validate the result
+        if (!refreshedPlaylist || !refreshedPlaylist.tracks || !Array.isArray(refreshedPlaylist.tracks)) {
+            return res.status(500).json({ error: 'Invalid refreshed playlist format' });
+        }
+
+        // Add refresh timestamp
+        refreshedPlaylist.lastRefresh = new Date().toISOString();
+        refreshedPlaylist.originalId = playlistId; // Keep original ID for frontend reference
+
+        console.log('🎉 Successfully refreshed playlist:', refreshedPlaylist.name, 'with', refreshedPlaylist.tracks.length, 'tracks');
+        res.json(refreshedPlaylist);
+
+    } catch (error) {
+        console.error('💥 Playlist refresh error:', error);
+        
+        let errorMessage = 'Failed to refresh playlist';
+        
+        if (error.message.includes('timed out')) {
+            errorMessage = 'Playlist refresh timed out - the playlist might be too large or unavailable';
+        } else if (error.message.includes('private')) {
+            errorMessage = 'This playlist is private or contains private videos';
+        } else if (error.message.includes('not found') || error.message.includes('404')) {
+            errorMessage = 'Playlist not found. It might have been deleted or made private';
+        }
+        
+        res.status(500).json({ 
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+// Check playlists that need refresh endpoint
+app.post('/check-playlist-updates', async (req, res) => {
+    try {
+        const { playlists } = req.body;
+        console.log('🔍 Checking', playlists.length, 'playlists for updates...');
+
+        if (!playlists || !Array.isArray(playlists)) {
+            return res.status(400).json({ error: 'Playlists array is required' });
+        }
+
+        const results = [];
+        const now = new Date();
+        const REFRESH_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        for (const playlist of playlists) {
+            if (!playlist.isYouTube || !playlist.originalUrl) {
+                // Skip non-YouTube playlists or those without URL
+                results.push({
+                    id: playlist.id,
+                    needsRefresh: false,
+                    reason: 'Not a YouTube playlist or missing URL'
+                });
+                continue;
+            }
+
+            const lastRefresh = playlist.lastRefresh ? new Date(playlist.lastRefresh) : null;
+            const needsRefresh = !lastRefresh || (now - lastRefresh) > REFRESH_INTERVAL;
+
+            results.push({
+                id: playlist.id,
+                needsRefresh,
+                reason: needsRefresh ? 
+                    (lastRefresh ? 'Last refreshed more than 24 hours ago' : 'Never refreshed') : 
+                    'Recently refreshed',
+                lastRefresh: playlist.lastRefresh,
+                url: playlist.originalUrl
+            });
+        }
+
+        const needsRefreshCount = results.filter(r => r.needsRefresh).length;
+        console.log('📊 Playlist check results:', needsRefreshCount, 'need refresh out of', results.length);
+
+        res.json({
+            results,
+            summary: {
+                total: results.length,
+                needsRefresh: needsRefreshCount,
+                upToDate: results.length - needsRefreshCount
+            }
+        });
+
+    } catch (error) {
+        console.error('💥 Playlist check error:', error);
+        res.status(500).json({ error: 'Failed to check playlist updates' });
+    }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
