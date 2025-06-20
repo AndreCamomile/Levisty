@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const ytdl = require('ytdl-core');
-const ytpl = require('ytpl');
 const { spawn } = require('child_process');
 const app = express();
 
