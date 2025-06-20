@@ -122,11 +122,23 @@ app.post('/import-playlist', async (req, res) => {
         console.log('Import playlist request for URL:', url);
 
         if (!url) {
+            console.error('No URL provided in request');
             return res.status(400).json({ error: 'URL is required' });
         }
 
+        console.log('Validating YouTube URL...');
         if (!isValidYouTubeUrl(url)) {
+            console.error('Invalid YouTube URL provided:', url);
             return res.status(400).json({ error: 'Invalid YouTube URL' });
+        }
+        
+        // Test ytpl library availability
+        try {
+            const ytpl = require('ytpl');
+            console.log('✓ ytpl library loaded successfully');
+        } catch (ytplLoadError) {
+            console.error('✗ Failed to load ytpl library:', ytplLoadError.message);
+            return res.status(500).json({ error: 'ytpl library not available' });
         }
 
         // Extract playlist ID from URL
@@ -178,6 +190,22 @@ app.post('/import-playlist', async (req, res) => {
             console.log('Playlist fetched with ytpl:', playlist?.title, 'Items:', playlist?.items?.length);
 
             if (playlist && playlist.items && playlist.items.length > 0) {
+                console.log('Processing ytpl playlist with', playlist.items.length, 'items');
+                
+                const rawTracks = playlist.items.map(item => {
+                    console.log('Processing item:', item.id, item.title);
+                    return {
+                        id: item.id,
+                        title: item.title || 'Untitled',
+                        thumbnail: item?.bestThumbnail?.url || item?.thumbnails?.[0]?.url || null,
+                        channel: item?.author?.name || 'Unknown Channel',
+                        duration: item.duration || 'Unknown'
+                    };
+                });
+                
+                const filteredTracks = rawTracks.filter(track => track.id);
+                console.log('Filtered tracks:', filteredTracks.length, 'out of', rawTracks.length);
+                
                 formattedPlaylist = {
                     id: playlist.id,
                     name: playlist.title || 'Untitled Playlist',
@@ -188,14 +216,12 @@ app.post('/import-playlist', async (req, res) => {
                                playlist?.thumbnails?.[0]?.url || 
                                (playlist.items?.[0]?.bestThumbnail?.url) || 
                                (playlist.items?.[0]?.thumbnails?.[0]?.url) || null,
-                    tracks: playlist.items.map(item => ({
-                        id: item.id,
-                        title: item.title || 'Untitled',
-                        thumbnail: item?.bestThumbnail?.url || item?.thumbnails?.[0]?.url || null,
-                        channel: item?.author?.name || 'Unknown Channel',
-                        duration: item.duration || 'Unknown'
-                    })).filter(track => track.id) // Filter out items without IDs
+                    tracks: filteredTracks
                 };
+                
+                console.log('Created ytpl formatted playlist with', formattedPlaylist.tracks.length, 'tracks');
+            } else {
+                console.log('ytpl result invalid - playlist:', !!playlist, 'items:', playlist?.items?.length);
             }
         } catch (ytplError) {
             console.warn('ytpl failed, trying Python method:', ytplError.message);
@@ -240,13 +266,67 @@ app.post('/import-playlist', async (req, res) => {
                     });
                 });
             } catch (pythonError) {
-                console.error('Python method also failed:', pythonError.message);
-                throw new Error('Both ytpl and Python methods failed to import playlist');
+                console.error('Python pytube method also failed:', pythonError.message);
+                
+                // Method 3: Try yt-dlp as last resort
+                try {
+                    console.log('Trying yt-dlp as last resort...');
+                    const ytdlpProcess = spawn('python3', ['playlist_import_ytdlp.py', url]);
+                    let ytdlpResult = '';
+                    let ytdlpError = '';
+
+                    ytdlpProcess.stdout.on('data', (data) => {
+                        ytdlpResult += data.toString();
+                    });
+
+                    ytdlpProcess.stderr.on('data', (data) => {
+                        ytdlpError += data.toString();
+                        console.log('yt-dlp playlist import log:', data.toString());
+                    });
+
+                    await new Promise((resolve, reject) => {
+                        ytdlpProcess.on('close', (code) => {
+                            if (code === 0) {
+                                try {
+                                    formattedPlaylist = JSON.parse(ytdlpResult);
+                                    console.log('Playlist imported with yt-dlp:', formattedPlaylist.name, 'with', formattedPlaylist.tracks.length, 'tracks');
+                                    resolve();
+                                } catch (parseError) {
+                                    console.error('Failed to parse yt-dlp output:', parseError);
+                                    reject(new Error('Failed to parse yt-dlp playlist data'));
+                                }
+                            } else {
+                                console.error('yt-dlp script failed with code:', code);
+                                console.error('yt-dlp error output:', ytdlpError);
+                                reject(new Error('yt-dlp playlist import failed'));
+                            }
+                        });
+
+                        ytdlpProcess.on('error', (error) => {
+                            console.error('Failed to start yt-dlp process:', error);
+                            reject(new Error('Failed to start yt-dlp playlist import'));
+                        });
+                    });
+                } catch (ytdlpError) {
+                    console.error('All methods failed - ytpl, pytube, and yt-dlp:', ytdlpError.message);
+                    throw new Error('All playlist import methods failed');
+                }
             }
         }
 
-        if (!formattedPlaylist || !formattedPlaylist.tracks || formattedPlaylist.tracks.length === 0) {
-            return res.status(404).json({ error: 'Playlist is empty or not found' });
+        if (!formattedPlaylist) {
+            console.error('No formatted playlist object created');
+            return res.status(404).json({ error: 'Failed to process playlist data' });
+        }
+        
+        if (!formattedPlaylist.tracks) {
+            console.error('No tracks property in formatted playlist:', formattedPlaylist);
+            return res.status(404).json({ error: 'Playlist has no tracks property' });
+        }
+        
+        if (formattedPlaylist.tracks.length === 0) {
+            console.error('Playlist tracks array is empty. Playlist object:', formattedPlaylist);
+            return res.status(404).json({ error: 'Playlist is empty or all tracks were filtered out' });
         }
 
         console.log('Final formatted playlist:', formattedPlaylist.name, 'with', formattedPlaylist.tracks.length, 'tracks');
@@ -274,6 +354,121 @@ app.post('/import-playlist', async (req, res) => {
             details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
+});
+
+// Test playlist import endpoint
+app.get('/test-playlist', async (req, res) => {
+    try {
+        console.log('Testing playlist import...');
+        
+        // Test with simple Python script first
+        const pythonProcess = spawn('python3', ['test_playlist.py']);
+        let result = '';
+        let error = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            result += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            error += data.toString();
+        });
+
+        await new Promise((resolve, reject) => {
+            pythonProcess.on('close', (code) => {
+                if (code === 0) {
+                    try {
+                        const testPlaylist = JSON.parse(result);
+                        console.log('Test playlist created successfully:', testPlaylist.name);
+                        res.json({
+                            success: true,
+                            testPlaylist: testPlaylist,
+                            logs: error
+                        });
+                        resolve();
+                    } catch (parseError) {
+                        console.error('Failed to parse test playlist:', parseError);
+                        res.status(500).json({
+                            success: false,
+                            error: 'Failed to parse test playlist',
+                            rawOutput: result,
+                            logs: error
+                        });
+                        resolve();
+                    }
+                } else {
+                    console.error('Test playlist script failed with code:', code);
+                    res.status(500).json({
+                        success: false,
+                        error: 'Test playlist script failed',
+                        exitCode: code,
+                        logs: error
+                    });
+                    resolve();
+                }
+            });
+
+            pythonProcess.on('error', (error) => {
+                console.error('Failed to start test playlist script:', error);
+                res.status(500).json({
+                    success: false,
+                    error: 'Failed to start test playlist script',
+                    details: error.message
+                });
+                resolve();
+            });
+        });
+    } catch (error) {
+        console.error('Test playlist error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Test endpoint for debugging Python scripts
+app.get('/test-python', (req, res) => {
+    console.log('Testing Python environment...');
+    
+    // Test basic Python
+    const pythonTest = spawn('python3', ['--version']);
+    let pythonVersion = '';
+    
+    pythonTest.stdout.on('data', (data) => {
+        pythonVersion += data.toString();
+    });
+    
+    pythonTest.stderr.on('data', (data) => {
+        pythonVersion += data.toString();
+    });
+    
+    pythonTest.on('close', (code) => {
+        console.log('Python version test result:', pythonVersion);
+        
+        // Test pytube import
+        const pytubeTest = spawn('python3', ['-c', 'import pytube; print("pytube imported successfully")']);
+        let pytubeResult = '';
+        let pytubeError = '';
+        
+        pytubeTest.stdout.on('data', (data) => {
+            pytubeResult += data.toString();
+        });
+        
+        pytubeTest.stderr.on('data', (data) => {
+            pytubeError += data.toString();
+        });
+        
+        pytubeTest.on('close', (pytubeCode) => {
+            res.json({
+                pythonVersion: pythonVersion.trim(),
+                pythonExitCode: code,
+                pytubeResult: pytubeResult.trim(),
+                pytubeError: pytubeError.trim(),
+                pytubeExitCode: pytubeCode
+            });
+        });
+    });
 });
 
 // Error handling middleware
