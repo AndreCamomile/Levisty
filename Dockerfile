@@ -1,7 +1,10 @@
-FROM node:18-alpine
+FROM node:18
 
 # Install Python and pip
-RUN apk add --no-cache python3 py3-pip
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -13,7 +16,7 @@ COPY package*.json ./
 RUN npm install
 
 # Install Python dependencies
-RUN pip install pytube yt-dlp
+RUN pip3 install --no-cache-dir pytube yt-dlp
 
 # Copy application files
 COPY . .
