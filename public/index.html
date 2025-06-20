@@ -2308,17 +2308,17 @@
         <div class="create-playlist-content">
             <div class="create-playlist-title">
                 <span class="material-icons" style="font-size: 32px; margin-right: 10px; vertical-align: middle;">youtube_searched_for</span>
-                Import YouTube Playlist
+                Import YouTube / YouTube Music Playlist
             </div>
             <div class="form-group">
                 <label for="ytPlaylistUrl">
                     <span class="material-icons" style="font-size: 18px; margin-right: 8px; vertical-align: middle;">link</span>
                     Playlist URL
                 </label>
-                <input type="text" id="ytPlaylistUrl" placeholder="Paste YouTube playlist link here...">
+                <input type="text" id="ytPlaylistUrl" placeholder="Paste YouTube or YouTube Music playlist link here...">
                 <div class="input-helper-text">
                     <span class="material-icons" style="font-size: 16px; margin-right: 6px; vertical-align: middle;">info</span>
-                    Make sure the playlist is public
+                    Supports YouTube and YouTube Music playlists. Make sure the playlist is public
                 </div>
             </div>
             <div class="modal-actions">
@@ -3355,8 +3355,8 @@
             }
 
             // Basic URL validation
-            if (!url.includes('youtube.com/playlist') && !url.includes('youtube.com/watch?v=') && !url.includes('youtu.be/')) {
-                showImportError('Invalid YouTube URL. Please enter a valid playlist URL');
+            if (!url.includes('youtube.com/playlist') && !url.includes('youtube.com/watch?v=') && !url.includes('youtu.be/') && !url.includes('music.youtube.com')) {
+                showImportError('Invalid YouTube URL. Please enter a valid YouTube or YouTube Music playlist URL');
                 return;
             }
 

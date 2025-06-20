@@ -5,11 +5,12 @@ from pytube import Playlist
 import time
 
 def extract_playlist_id(url):
-    """Extract playlist ID from YouTube URL"""
+    """Extract playlist ID from YouTube or YouTube Music URL"""
     patterns = [
-        r'[&?]list=([^&]+)',
-        r'playlist\?list=([^&]+)',
-        r'playlist/([a-zA-Z0-9_-]+)'
+        r'[&?]list=([^&]+)',                           # Standard YouTube playlist
+        r'playlist\?list=([^&]+)',                     # Direct playlist link
+        r'playlist/([a-zA-Z0-9_-]+)',                  # Alternative format
+        r'music\.youtube\.com\/playlist\?list=([^&]+)' # YouTube Music playlist
     ]
     
     for pattern in patterns:
@@ -29,6 +30,11 @@ def import_playlist(url):
             return 1
             
         print(f"Extracted playlist ID: {playlist_id}", file=sys.stderr)
+        
+        # Convert YouTube Music URL to standard YouTube URL for better compatibility
+        if 'music.youtube.com' in url:
+            url = f"https://www.youtube.com/playlist?list={playlist_id}"
+            print(f"Converted YouTube Music URL to: {url}", file=sys.stderr)
         
         # Create Playlist object
         playlist = Playlist(url)

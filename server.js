@@ -18,9 +18,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const searchCache = new Map();
 let lastSearchTime = 0;
 
-// Helper function to validate YouTube URL
+// Helper function to validate YouTube URL (including YouTube Music)
 function isValidYouTubeUrl(url) {
-    const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+    const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|music\.youtube\.com)\/.+/;
     return pattern.test(url);
 }
 
@@ -135,8 +135,18 @@ app.post('/import-playlist', async (req, res) => {
             console.log('Extracting playlist ID from URL...');
             
             // Manual extraction as backup for ytpl.getPlaylistID
-            const urlPattern = /[&?]list=([^&]+)/;
-            const match = url.match(urlPattern);
+            const urlPatterns = [
+                /[&?]list=([^&]+)/,           // Standard YouTube playlist
+                /playlist\?list=([^&]+)/,     // Direct playlist link
+                /music\.youtube\.com\/playlist\?list=([^&]+)/ // YouTube Music playlist
+            ];
+            
+            let match = null;
+            for (const pattern of urlPatterns) {
+                match = url.match(pattern);
+                if (match) break;
+            }
+            
             if (match) {
                 playlistId = match[1];
                 console.log('Manually extracted playlist ID:', playlistId);
