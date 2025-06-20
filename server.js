@@ -308,8 +308,51 @@ app.post('/import-playlist', async (req, res) => {
                         });
                     });
                 } catch (ytdlpError) {
-                    console.error('All methods failed - ytpl, pytube, and yt-dlp:', ytdlpError.message);
-                    throw new Error('All playlist import methods failed');
+                    console.error('yt-dlp Python method also failed:', ytdlpError.message);
+                    
+                    // Method 4: Try yt-dlp command line as final resort
+                    try {
+                        console.log('Trying yt-dlp command line as final resort...');
+                        const cmdProcess = spawn('python3', ['playlist_import_cmd.py', url]);
+                        let cmdResult = '';
+                        let cmdError = '';
+
+                        cmdProcess.stdout.on('data', (data) => {
+                            cmdResult += data.toString();
+                        });
+
+                        cmdProcess.stderr.on('data', (data) => {
+                            cmdError += data.toString();
+                            console.log('yt-dlp command log:', data.toString());
+                        });
+
+                        await new Promise((resolve, reject) => {
+                            cmdProcess.on('close', (code) => {
+                                if (code === 0) {
+                                    try {
+                                        formattedPlaylist = JSON.parse(cmdResult);
+                                        console.log('Playlist imported with yt-dlp command:', formattedPlaylist.name, 'with', formattedPlaylist.tracks.length, 'tracks');
+                                        resolve();
+                                    } catch (parseError) {
+                                        console.error('Failed to parse yt-dlp command output:', parseError);
+                                        reject(new Error('Failed to parse yt-dlp command playlist data'));
+                                    }
+                                } else {
+                                    console.error('yt-dlp command script failed with code:', code);
+                                    console.error('yt-dlp command error output:', cmdError);
+                                    reject(new Error('yt-dlp command playlist import failed'));
+                                }
+                            });
+
+                            cmdProcess.on('error', (error) => {
+                                console.error('Failed to start yt-dlp command process:', error);
+                                reject(new Error('Failed to start yt-dlp command playlist import'));
+                            });
+                        });
+                    } catch (cmdError) {
+                        console.error('All methods failed - ytpl, pytube, yt-dlp Python, and yt-dlp command:', cmdError.message);
+                        throw new Error('All playlist import methods failed');
+                    }
                 }
             }
         }
