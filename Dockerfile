@@ -1,28 +1,23 @@
-FROM node:18
+FROM python:3.11-slim
 
-# Install Python and required build dependencies
+# Install Node.js
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-dev \
-    build-essential \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
-
-# Upgrade pip
-RUN pip3 install --upgrade pip
 
 # Set working directory
 WORKDIR /app
+
+# Install Python dependencies first
+RUN pip install --no-cache-dir pytube yt-dlp
 
 # Copy package files
 COPY package*.json ./
 
 # Install Node.js dependencies
 RUN npm install
-
-# Install Python dependencies one by one to better handle errors
-RUN pip3 install --no-cache-dir pytube
-RUN pip3 install --no-cache-dir yt-dlp
 
 # Copy application files
 COPY . .
