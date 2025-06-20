@@ -2160,10 +2160,7 @@
             <button class="playlist-details-menu" onclick="togglePlaylistMenu(event)" style="display: none;">
                 <span class="material-icons">more_vert</span>
                 <div class="playlist-menu-dropdown">
-                    <div class="playlist-menu-item refresh" onclick="refreshPlaylist(event)" style="display: none;">
-                        <span class="material-icons">refresh</span>
-                        Refresh Playlist
-                    </div>
+
                     <div class="playlist-menu-item delete" onclick="deletePlaylist(event)">
                         <span class="material-icons">delete</span>
                         Delete Playlist
@@ -3702,13 +3699,7 @@
             modal.setAttribute('data-playlist-id', playlist.id);
             currentPlaylistForMenu = playlist;
 
-            // Show/hide refresh button based on playlist type (for web fallback)
-            const refreshButton = modal.querySelector('.playlist-menu-item.refresh');
-            if (playlist.isYouTube && playlist.originalUrl) {
-                refreshButton.style.display = 'flex';
-            } else {
-                refreshButton.style.display = 'none';
-            }
+
 
             // Setup Telegram buttons if available
             if (window.Telegram?.WebApp) {
@@ -3856,90 +3847,7 @@
             }
         }
 
-        async function refreshPlaylist(event) {
-            event.stopPropagation();
-            
-            const modal = document.querySelector('.playlist-details-modal');
-            const playlistId = modal.getAttribute('data-playlist-id');
-            
-            // Get the playlist data
-            const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
-            const playlist = playlists.find(p => p.id == playlistId);
-            
-            if (!playlist) {
-                showRefreshNotification('❌ Playlist not found', 'error');
-                return;
-            }
-            
-            if (!playlist.isYouTube || !playlist.originalUrl) {
-                showRefreshNotification('❌ Only YouTube playlists can be refreshed', 'error');
-                return;
-            }
-            
-            if (confirm(`Refresh "${playlist.name}" playlist? This will update the tracks with the latest content from YouTube.`)) {
-                try {
-                    // Show loading notification
-                    showRefreshNotification(`🔄 Refreshing "${playlist.name}"...`, 'info');
-                    
-                    // Close dropdown and modal
-                    const dropdown = modal.querySelector('.playlist-menu-dropdown');
-                    dropdown.classList.remove('active');
-                    modal.classList.remove('active');
-                    
-                    // Call refresh endpoint
-                    const response = await fetch('/refresh-playlist', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            playlistUrl: playlist.originalUrl,
-                            playlistId: playlist.id
-                        })
-                    });
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Failed to refresh playlist');
-                    }
-
-                    const refreshedData = await response.json();
-                    
-                    // Update the playlist in local storage
-                    const playlistIndex = playlists.findIndex(p => p.id == playlistId);
-                    if (playlistIndex !== -1) {
-                        // Preserve original playlist properties but update content
-                        playlists[playlistIndex] = {
-                            ...playlists[playlistIndex],
-                            name: refreshedData.name,
-                            description: refreshedData.description,
-                            tracks: refreshedData.tracks,
-                            lastRefresh: refreshedData.lastRefresh,
-                            // Keep original cover if user customized it, otherwise use new one
-                            cover: playlists[playlistIndex].cover || {
-                                type: 'image',
-                                url: refreshedData.coverImage || refreshedData.tracks[0]?.thumbnail || ''
-                            }
-                        };
-                        
-                        // Save to localStorage
-                        localStorage.setItem('playlists', JSON.stringify(playlists));
-                        
-                        // Update UI
-                        updatePlaylistsList();
-                        
-                        // Show success message
-                        showRefreshNotification(`✅ "${refreshedData.name}" updated with ${refreshedData.tracks.length} tracks!`, 'success');
-                        
-                        console.log(`✅ Successfully refreshed playlist: ${refreshedData.name} (${refreshedData.tracks.length} tracks)`);
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Error refreshing playlist:', error);
-                    showRefreshNotification(`❌ Failed to refresh playlist: ${error.message}`, 'error');
-                }
-            }
-        }
 
         function updatePlaylistsList() {
             const container = document.getElementById('playlistsContainer');
@@ -4154,19 +4062,7 @@
             // Store current playlist reference
             currentPlaylistForMenu = playlist;
 
-            // Setup refresh button for YouTube playlists
-            if (playlist.isYouTube && playlist.originalUrl) {
-                tg.MainButton.setText('🔄 Refresh Playlist');
-                tg.MainButton.color = '#007AFF';
-                tg.MainButton.textColor = '#FFFFFF';
-                tg.MainButton.show();
-                
-                tg.MainButton.onClick(() => {
-                    handleTelegramRefreshPlaylist(playlist);
-                });
-            }
-
-            // Setup delete button using secondary button (if available) or settings button
+            // Setup only delete button using settings button
             tg.SettingsButton.show();
             tg.SettingsButton.onClick(() => {
                 // Show delete confirmation
@@ -4192,73 +4088,7 @@
             currentPlaylistForMenu = null;
         }
 
-        async function handleTelegramRefreshPlaylist(playlist) {
-            const tg = window.Telegram?.WebApp;
-            
-            try {
-                // Show loading
-                tg.showAlert('🔄 Refreshing playlist...');
-                
-                // Get playlists from storage
-                const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
-                
-                // Call refresh endpoint
-                const response = await fetch('/refresh-playlist', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        playlistUrl: playlist.originalUrl,
-                        playlistId: playlist.id
-                    })
-                });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to refresh playlist');
-                }
-
-                const refreshedData = await response.json();
-                
-                // Update the playlist in local storage
-                const playlistIndex = playlists.findIndex(p => p.id == playlist.id);
-                if (playlistIndex !== -1) {
-                    // Preserve original playlist properties but update content
-                    playlists[playlistIndex] = {
-                        ...playlists[playlistIndex],
-                        name: refreshedData.name,
-                        description: refreshedData.description,
-                        tracks: refreshedData.tracks,
-                        lastRefresh: refreshedData.lastRefresh,
-                        cover: playlists[playlistIndex].cover || {
-                            type: 'image',
-                            url: refreshedData.coverImage || refreshedData.tracks[0]?.thumbnail || ''
-                        }
-                    };
-                    
-                    // Save to localStorage
-                    localStorage.setItem('playlists', JSON.stringify(playlists));
-                    
-                    // Update UI
-                    updatePlaylistsList();
-                    
-                    // Close modal
-                    const modal = document.querySelector('.playlist-details-modal');
-                    modal.classList.remove('active');
-                    clearTelegramPlaylistButtons();
-                    
-                    // Show success
-                    tg.showAlert(`✅ "${refreshedData.name}" updated with ${refreshedData.tracks.length} tracks!`);
-                    
-                    console.log(`✅ Successfully refreshed playlist: ${refreshedData.name} (${refreshedData.tracks.length} tracks)`);
-                }
-                
-            } catch (error) {
-                console.error('❌ Error refreshing playlist:', error);
-                tg.showAlert(`❌ Failed to refresh playlist: ${error.message}`);
-            }
-        }
 
         function handleTelegramDeletePlaylist(playlist) {
             const tg = window.Telegram?.WebApp;
