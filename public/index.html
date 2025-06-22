@@ -817,6 +817,21 @@
             left: 40px;
         }
 
+        .search-page .search-bar {
+            width: 300px !important;
+            border-radius: 25px !important;
+        }
+
+        .search-page .search-input {
+            opacity: 1 !important;
+            padding: 0 50px !important;
+        }
+
+        .search-page .search-icon {
+            left: 18px !important;
+            transform: translateY(-50%) !important;
+        }
+
         .search-page .search-results {
             position: absolute;
             top: 240px;
@@ -2484,10 +2499,16 @@
         loadYouTubeAPI();
 
         searchBar.addEventListener('click', () => {
-            searchBar.classList.add('expanded');
-            setTimeout(() => {
-                searchInput.focus();
-            }, 300);
+            // Only expand on home page, not on search page
+            const searchPage = document.querySelector('.search-page');
+            const isSearchPageActive = searchPage && searchPage.classList.contains('active');
+            
+            if (!isSearchPageActive) {
+                searchBar.classList.add('expanded');
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 300);
+            }
         });
 
         document.addEventListener('click', (e) => {
@@ -2505,6 +2526,8 @@
             const searchPage = document.querySelector('.search-page');
             const isSearchPageActive = searchPage && searchPage.classList.contains('active');
             
+            console.log('Search input:', query, 'Search page active:', isSearchPageActive);
+            
             if (query.length < 2) {
                 searchResults.classList.remove('active');
                 return;
@@ -2512,13 +2535,16 @@
 
             // Only show results if on search page
             if (!isSearchPageActive) {
+                console.log('Not on search page, skipping search');
                 return;
             }
 
+            console.log('Performing search for:', query);
             searchResults.classList.add('active');
 
             searchTimeout = setTimeout(async () => {
                 try {
+                    console.log('Sending search request...');
                     const response = await fetch('/search', {
                         method: 'POST',
                         headers: {
@@ -2527,20 +2553,29 @@
                         body: JSON.stringify({ query })
                     });
 
+                    console.log('Search response status:', response.status);
+                    
                     if (!response.ok) {
+                        console.log('Search response not ok');
                         searchResults.classList.remove('active');
                         return;
                     }
 
                     const data = await response.json();
+                    console.log('Search data received:', data);
+                    
                     if (Array.isArray(data) && data.length > 0) {
+                        console.log('Displaying search results:', data.length, 'items');
                         displaySearchResults(data);
                     } else if (data.videos && Array.isArray(data.videos) && data.videos.length > 0) {
+                        console.log('Displaying search videos:', data.videos.length, 'items');
                         displaySearchResults(data.videos);
                     } else {
+                        console.log('No search results found');
                         searchResults.classList.remove('active');
                     }
                 } catch (error) {
+                    console.error('Search error:', error);
                     searchResults.classList.remove('active');
                 }
             }, 300);
@@ -2557,11 +2592,17 @@
         });
 
         function displaySearchResults(results) {
+            console.log('displaySearchResults called with:', results);
+            
             if (!results || !Array.isArray(results) || results.length === 0) {
+                console.log('No results to display');
                 searchResults.classList.remove('active');
                 return;
             }
 
+            console.log('Building results UI for', results.length, 'items');
+            console.log('Search results element:', searchResults);
+            
             searchResults.innerHTML = '';
             const resultList = document.createElement('ul');
             resultList.className = 'search-results-list';
@@ -2592,6 +2633,9 @@
             
             searchResults.appendChild(resultList);
             searchResults.classList.add('active');
+            
+            console.log('Search results active class added, should be visible now');
+            console.log('Search results computed style:', window.getComputedStyle(searchResults).display);
         }
 
 
@@ -3263,10 +3307,6 @@
                 homePage.classList.remove('active');
                 searchPage.classList.add('active');
                 libraryPage.classList.remove('active');
-                // Focus on search input when entering search page
-                setTimeout(() => {
-                    searchInput.focus();
-                }, 100);
             });
 
             libraryButton.addEventListener('click', () => {
