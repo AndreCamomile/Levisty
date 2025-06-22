@@ -3205,26 +3205,14 @@
             }
         });
 
-        // Sync play/pause state between mini and full player
-        fullPlayerPlayPause.addEventListener('click', () => {
-            togglePlayPause();
-        });
+
 
         // Додаємо обробники подій для всіх кнопок керування
         document.addEventListener('DOMContentLoaded', () => {
-            // Обробник для кнопки play в мініплеєрі
-            const playButton = document.querySelector('.mini-player .play-pause-icon.play');
-            if (playButton) {
-                playButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    togglePlayPause();
-                });
-            }
-
-            // Обробник для кнопки pause в мініплеєрі
-            const pauseButton = document.querySelector('.mini-player .play-pause-icon.pause');
-            if (pauseButton) {
-                pauseButton.addEventListener('click', (e) => {
+            // Обробник для основної кнопки play/pause в мініплеєрі
+            const playPauseButton = document.getElementById('playPauseButton');
+            if (playPauseButton) {
+                playPauseButton.addEventListener('click', (e) => {
                     e.stopPropagation();
                     togglePlayPause();
                 });
@@ -3239,48 +3227,7 @@
                 });
             }
 
-            // Обробник для кнопки prev в мініплеєрі
-            const prevButton = document.querySelector('.mini-player .prev-btn');
-            if (prevButton) {
-                prevButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!currentAudio) return;
-                    currentAudio.currentTime = Math.max(0, currentAudio.currentTime - 10);
-                });
-            }
 
-            // Обробник для кнопки next в мініплеєрі
-            const nextButton = document.querySelector('.mini-player .next-btn');
-            if (nextButton) {
-                nextButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!currentAudio) return;
-                    currentAudio.currentTime = Math.min(currentAudio.duration, currentAudio.currentTime + 10);
-                });
-            }
-
-            // Обробник для таймлайну в мініплеєрі
-            const timeline = document.querySelector('.mini-player .timeline');
-            if (timeline) {
-                timeline.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (!currentAudio) return;
-                    
-                    const rect = timeline.getBoundingClientRect();
-                    const pos = (e.clientX - rect.left) / rect.width;
-                    currentAudio.currentTime = pos * currentAudio.duration;
-                });
-            }
-
-            // Обробник для регулятора гучності в мініплеєрі
-            const volumeSlider = document.querySelector('.mini-player .volume-slider');
-            if (volumeSlider) {
-                volumeSlider.addEventListener('input', (e) => {
-                    e.stopPropagation();
-                    if (!currentAudio) return;
-                    currentAudio.volume = parseFloat(e.target.value);
-                });
-            }
         });
 
         // Timeline seeking functionality
