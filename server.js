@@ -171,7 +171,7 @@ app.post('/import-playlist', async (req, res) => {
                         console.error('❌ Failed to parse playlist data:', parseError);
                         console.error('Raw output:', result);
                         reject(new Error('Invalid playlist data received'));
-                    }
+        }
                 } else {
                     console.error('❌ Playlist import failed with code:', code);
                     console.error('Error output:', errorOutput);
