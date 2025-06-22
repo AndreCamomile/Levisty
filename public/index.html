@@ -4504,28 +4504,7 @@
         let longPressTimer;
         let isLongPressed = false;
 
-        // Vibration function
-        function triggerVibration() {
-            try {
-                // Try Telegram WebApp haptic feedback first
-                if (window.Telegram?.WebApp?.HapticFeedback) {
-                    window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-                    console.log('Telegram haptic feedback triggered');
-                    return;
-                }
-                
-                // Try standard browser vibration API
-                if (navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]); // Pattern: vibrate 100ms, pause 50ms, vibrate 100ms
-                    console.log('Browser vibration triggered');
-                    return;
-                }
-                
-                console.log('No vibration API available');
-            } catch (error) {
-                console.log('Vibration failed:', error);
-            }
-        }
+
 
         function setupRecentsLongPress() {
             const recentsTitle = document.getElementById('recentsTitle');
@@ -4539,10 +4518,6 @@
                 
                 longPressTimer = setTimeout(() => {
                     isLongPressed = true;
-                    // Add haptic feedback if available
-                    if (window.Telegram?.WebApp?.HapticFeedback) {
-                        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-                    }
                 }, 2000); // 2 seconds
             }
 
@@ -4555,10 +4530,6 @@
                 // Show clear text only if long press was completed
                 if (isLongPressed) {
                     showClearText();
-                    
-                    // Add vibration when showing clear text
-                    triggerVibration();
-                    
                     isLongPressed = false;
                 }
             }
