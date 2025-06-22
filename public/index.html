@@ -59,13 +59,10 @@
             border-radius: 12px;
             transition: all 0.3s ease;
             z-index: 1000;
-            pointer-events: none;
+            pointer-events: auto;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             margin-bottom: 10px;
-        }
-
-        .mini-player * {
-            pointer-events: auto;
+            cursor: pointer;
         }
 
         .mini-player .album-cover {
@@ -117,6 +114,8 @@
             justify-content: center;
             border-radius: 50%;
             transition: background-color 0.2s;
+            position: relative;
+            z-index: 2;
         }
 
         .mini-player .control-button:hover {
@@ -384,6 +383,12 @@
             background-repeat: no-repeat;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: transform 0.3s ease;
+        }
+
+        .mini-player:hover {
+            background-color: rgba(36, 36, 36, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
         }
 
         .mini-player:hover .album-cover {
@@ -2951,11 +2956,21 @@
             // Prevent click if we're dragging
             if (isDragging) return;
             
-            // Don't trigger if clicking on control buttons
-            if (e.target.closest('.control-button')) return;
+            // Don't trigger if clicking on control buttons or their icons
+            if (e.target.closest('.control-button') || 
+                e.target.closest('.play-pause-container') ||
+                e.target.tagName === 'SPAN' && e.target.classList.contains('material-icons')) {
+                return;
+            }
             
+            console.log('Mini-player clicked, opening full player');
             fullPlayer.classList.add('active');
             fullPlayer.style.transform = 'translateY(0)';
+            
+            // Show Telegram Back Button if available
+            if (window.Telegram?.WebApp?.BackButton) {
+                window.Telegram.WebApp.BackButton.show();
+            }
         });
 
         // Swipe up to open full player
