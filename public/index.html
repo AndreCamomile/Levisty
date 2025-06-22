@@ -1118,7 +1118,7 @@
         }
 
         .recents-section {
-            margin-top: 130px;
+            margin-top: 170px;
             padding: 0;
             overflow: visible;
             width: 100%;
@@ -1131,8 +1131,10 @@
             font-size: 32px;
             font-weight: bold;
             color: #fff;
-            padding: 10px 0 20px 0;
-            margin-left: 40px;
+            padding: 10px 0 0 0;
+            position: absolute;
+            top: 85px;
+            left: 40px !important;
             background: transparent;
             z-index: 1;
         }
@@ -1150,10 +1152,27 @@
             position: relative;
         }
 
+        .recents-list::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.9) 80%, #000000 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
         .recents-list.expanded {
-            max-height: none;
-            overflow: visible;
-            padding-bottom: 60px;
+            max-height: 85vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 400px;
+        }
+
+        .recents-list.expanded::after {
+            display: none;
         }
 
         @media (max-width: 768px) {
@@ -1231,13 +1250,12 @@
             transform: rotate(180deg);
         }
 
-        .recents-expand-button.hidden {
-            display: none;
-        }
+
 
         .recents-collapse-button {
-            position: static;
-            margin: 20px auto 0;
+            position: absolute;
+            top: -95px;
+            right: 40px;
             background: rgba(26, 26, 26, 0.9);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -1256,14 +1274,12 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
 
-        .recents-collapse-button.visible {
-            display: flex;
-        }
+
 
         .recents-collapse-button:hover {
             background: rgba(36, 36, 36, 0.9);
             border-color: rgba(255, 255, 255, 0.3);
-            transform: translateX(-50%) translateY(-1px);
+            transform: translateY(-1px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
         }
 
@@ -2363,12 +2379,9 @@
                     <span>Show more</span>
                     <span class="material-icons">expand_more</span>
                 </button>
-                <div style="display: flex; justify-content: center; width: 100%;">
-                    <button class="recents-collapse-button" id="recentsCollapseButton">
-                        <span class="material-icons">expand_less</span>
-                        <span>Show less</span>
-                    </button>
-                </div>
+                <button class="recents-collapse-button" id="recentsCollapseButton">
+                    <span class="material-icons">expand_less</span>
+                </button>
             </div>
         </div>
 
@@ -3446,7 +3459,10 @@
             const expandButton = document.getElementById('recentsExpandButton');
             const recents = JSON.parse(localStorage.getItem('recents') || '[]');
             
-            recentsList.innerHTML = recents.map(track => `
+            // Limit to maximum 12 tracks
+            const limitedRecents = recents.slice(0, 12);
+            
+            recentsList.innerHTML = limitedRecents.map(track => `
                 <div class="recent-item" data-track='${JSON.stringify(track)}' onclick="playRecentTrack(this)">
                     <img src="${track.thumbnail}" alt="${track.title}">
                     <div class="recent-item-title">${track.title}</div>
@@ -3465,16 +3481,16 @@
             
             // Reset to collapsed state to measure
             recentsList.classList.remove('expanded');
-            collapseButton.classList.remove('visible');
+            collapseButton.style.display = 'none';
             
-            // Calculate if content overflows
-            const listHeight = recentsList.scrollHeight;
-            const maxHeight = 180; // Should match CSS max-height
+            // Count number of tracks
+            const trackCount = recentsList.children.length;
             
-            if (listHeight > maxHeight) {
-                expandButton.classList.remove('hidden');
+            // Show expand button if more than 6 tracks
+            if (trackCount > 6) {
+                expandButton.style.display = 'flex';
             } else {
-                expandButton.classList.add('hidden');
+                expandButton.style.display = 'none';
             }
         }
 
@@ -3484,8 +3500,8 @@
             const collapseButton = document.getElementById('recentsCollapseButton');
             
             recentsList.classList.add('expanded');
-            expandButton.classList.add('hidden');
-            collapseButton.classList.add('visible');
+            expandButton.style.display = 'none';
+            collapseButton.style.display = 'flex';
         }
 
         function collapseRecents() {
@@ -3494,8 +3510,8 @@
             const collapseButton = document.getElementById('recentsCollapseButton');
             
             recentsList.classList.remove('expanded');
-            expandButton.classList.remove('hidden');
-            collapseButton.classList.remove('visible');
+            expandButton.style.display = 'flex';
+            collapseButton.style.display = 'none';
             
             // Scroll back to recents title
             document.querySelector('.recents-title').scrollIntoView({ 
