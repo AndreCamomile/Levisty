@@ -1127,16 +1127,72 @@
             min-height: 200px;
         }
 
+        .recents-header {
+            position: absolute;
+            top: 85px;
+            left: 40px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            z-index: 1;
+        }
+
         .recents-title {
             font-size: 32px;
             font-weight: bold;
             color: #fff;
             padding: 10px 0 0 0;
-            position: absolute;
-            top: 85px;
-            left: 40px !important;
             background: transparent;
-            z-index: 1;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s ease;
+            position: relative;
+            display: inline-block;
+        }
+
+        .recents-title:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .recents-text, .clear-text {
+            display: inline-block;
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .recents-text {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            filter: blur(0px);
+        }
+
+        .clear-text {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            transform: scale(0.8) rotate(-5deg);
+            filter: blur(3px);
+            color: #fff;
+            font-size: 32px;
+            font-weight: bold;
+            padding: 10px 0 0 0;
+        }
+
+        .recents-text.hidden {
+            opacity: 0;
+            transform: scale(1.1) rotate(5deg);
+            filter: blur(3px);
+        }
+
+        .clear-text:not(.hidden) {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            filter: blur(0px);
+        }
+
+        .clear-text:hover {
+            color: rgba(255, 255, 255, 0.8);
+            transform: scale(1.02) rotate(0deg);
         }
 
         .recents-list {
@@ -2372,7 +2428,12 @@
 
     <div class="content">
         <div class="home-page active">
-            <div class="recents-title">Recents</div>
+            <div class="recents-header">
+                <div class="recents-title" id="recentsTitle">
+                    <span class="recents-text" id="recentsText">Recents</span>
+                    <span class="clear-text hidden" id="clearText">Clear</span>
+                </div>
+            </div>
             <div class="recents-section" id="recentsSection">
                 <div class="recents-list" id="recentsList"></div>
                 <button class="recents-expand-button hidden" id="recentsExpandButton">
@@ -3486,8 +3547,8 @@
             // Count number of tracks
             const trackCount = recentsList.children.length;
             
-            // Show expand button if more than 6 tracks
-            if (trackCount > 6) {
+            // Show expand button if more than 3 tracks
+            if (trackCount > 3) {
                 expandButton.style.display = 'flex';
             } else {
                 expandButton.style.display = 'none';
@@ -3510,8 +3571,15 @@
             const collapseButton = document.getElementById('recentsCollapseButton');
             
             recentsList.classList.remove('expanded');
-            expandButton.style.display = 'flex';
             collapseButton.style.display = 'none';
+            
+            // Only show expand button if there are more than 3 tracks
+            const trackCount = recentsList.children.length;
+            if (trackCount > 3) {
+                expandButton.style.display = 'flex';
+            } else {
+                expandButton.style.display = 'none';
+            }
             
             // Scroll back to recents title
             document.querySelector('.recents-title').scrollIntoView({ 
@@ -4431,6 +4499,156 @@
                 tg.showAlert(`❌ Failed to delete playlist: ${error.message}`);
             }
         }
+
+        // Long press functionality for recents title
+        let longPressTimer;
+        let isLongPressed = false;
+
+        // Vibration function
+        function triggerVibration() {
+            try {
+                // Try Telegram WebApp haptic feedback first
+                if (window.Telegram?.WebApp?.HapticFeedback) {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                    console.log('Telegram haptic feedback triggered');
+                    return;
+                }
+                
+                // Try standard browser vibration API
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100]); // Pattern: vibrate 100ms, pause 50ms, vibrate 100ms
+                    console.log('Browser vibration triggered');
+                    return;
+                }
+                
+                console.log('No vibration API available');
+            } catch (error) {
+                console.log('Vibration failed:', error);
+            }
+        }
+
+        function setupRecentsLongPress() {
+            const recentsTitle = document.getElementById('recentsTitle');
+            const recentsText = document.getElementById('recentsText');
+            const clearText = document.getElementById('clearText');
+            let isClearMode = false;
+
+            function startLongPress(e) {
+                e.preventDefault();
+                isLongPressed = false;
+                
+                longPressTimer = setTimeout(() => {
+                    isLongPressed = true;
+                    // Add haptic feedback if available
+                    if (window.Telegram?.WebApp?.HapticFeedback) {
+                        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                    }
+                }, 2000); // 2 seconds
+            }
+
+            function endLongPress(e) {
+                if (longPressTimer) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                }
+                
+                // Show clear text only if long press was completed
+                if (isLongPressed) {
+                    showClearText();
+                    
+                    // Add vibration when showing clear text
+                    triggerVibration();
+                    
+                    isLongPressed = false;
+                }
+            }
+
+            function showClearText() {
+                recentsText.classList.add('hidden');
+                clearText.classList.remove('hidden');
+                isClearMode = true;
+                
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    hideClearText();
+                }, 5000);
+            }
+
+            function hideClearText() {
+                console.log('Hiding clear text, returning to recents');
+                recentsText.classList.remove('hidden');
+                clearText.classList.add('hidden');
+                isClearMode = false;
+            }
+
+            function handleClick(e) {
+                e.preventDefault();
+                
+                if (isClearMode) {
+                    console.log('Click in clear mode, showing confirmation');
+                    // Show confirmation using standard confirm dialog
+                    if (confirm('Are you sure you want to clear all recent tracks?')) {
+                        performClearRecentTracks();
+                    } else {
+                        // User cancelled, return to normal text
+                        hideClearText();
+                    }
+                }
+            }
+
+            function handleMouseDown(e) {
+                // Only start long press if not in clear mode
+                if (!isClearMode) {
+                    startLongPress(e);
+                }
+            }
+
+            function performClearRecentTracks() {
+                console.log('Performing clear recent tracks');
+                // Clear from localStorage
+                localStorage.removeItem('recentTracks');
+                localStorage.removeItem('recents');
+                
+                // Clear from UI
+                const recentsList = document.getElementById('recentsList');
+                recentsList.innerHTML = '';
+                
+                // Hide all buttons since no tracks remain
+                document.getElementById('recentsExpandButton').style.display = 'none';
+                document.getElementById('recentsCollapseButton').style.display = 'none';
+                
+                // Return to normal text
+                hideClearText();
+                
+                // Show success notification
+                showNotification('✅ Recent tracks cleared', 'success');
+            }
+
+            // Event listeners for touch and mouse
+            recentsTitle.addEventListener('mousedown', handleMouseDown);
+            recentsTitle.addEventListener('mouseup', endLongPress);
+            recentsTitle.addEventListener('mouseleave', endLongPress);
+            recentsTitle.addEventListener('touchstart', (e) => {
+                if (!isClearMode) {
+                    startLongPress(e);
+                }
+            }, { passive: false });
+            recentsTitle.addEventListener('touchend', endLongPress);
+            recentsTitle.addEventListener('touchcancel', endLongPress);
+
+            // Click handler for clear action
+            recentsTitle.addEventListener('click', handleClick);
+
+            // Click outside to hide clear text
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.recents-header')) {
+                    hideClearText();
+                }
+            });
+        }
+
+        // Initialize long press functionality when DOM is ready
+        document.addEventListener('DOMContentLoaded', setupRecentsLongPress);
 
 
 
