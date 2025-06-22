@@ -1148,6 +1148,13 @@
             padding: 0 40px 20px 40px;
             width: 100%;
             background: transparent;
+            max-height: 180px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            position: relative;
+        }
+
+        .recents-list.expanded {
             max-height: calc(100vh - 200px);
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -1190,6 +1197,48 @@
 
         .recents-list::-webkit-scrollbar-thumb:hover {
             background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .recents-expand-button {
+            position: absolute;
+            bottom: 10px;
+            right: 50px;
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .recents-expand-button:hover {
+            background: rgba(36, 36, 36, 0.9);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .recents-expand-button .material-icons {
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .recents-expand-button.expanded .material-icons {
+            transform: rotate(180deg);
+        }
+
+        .recents-expand-button.hidden {
+            display: none;
         }
 
         .recent-item {
@@ -2280,6 +2329,10 @@
             <div class="recents-title">Recents</div>
             <div class="recents-section" id="recentsSection">
                 <div class="recents-list" id="recentsList"></div>
+                <button class="recents-expand-button hidden" id="recentsExpandButton">
+                    <span>Show more</span>
+                    <span class="material-icons">expand_more</span>
+                </button>
             </div>
         </div>
 
@@ -3354,6 +3407,7 @@
         // Add this function to update recents list
         function updateRecentsList() {
             const recentsList = document.getElementById('recentsList');
+            const expandButton = document.getElementById('recentsExpandButton');
             const recents = JSON.parse(localStorage.getItem('recents') || '[]');
             
             recentsList.innerHTML = recents.map(track => `
@@ -3363,6 +3417,48 @@
                     <div class="recent-item-artist">${track.channel}</div>
                 </div>
             `).join('');
+            
+            // Check if we need to show expand button
+            checkRecentsOverflow();
+        }
+
+        function checkRecentsOverflow() {
+            const recentsList = document.getElementById('recentsList');
+            const expandButton = document.getElementById('recentsExpandButton');
+            
+            // Reset to collapsed state to measure
+            recentsList.classList.remove('expanded');
+            
+            // Calculate if content overflows
+            const listHeight = recentsList.scrollHeight;
+            const maxHeight = 180; // Should match CSS max-height
+            
+            if (listHeight > maxHeight) {
+                expandButton.classList.remove('hidden');
+            } else {
+                expandButton.classList.add('hidden');
+            }
+        }
+
+        function toggleRecentsExpansion() {
+            const recentsList = document.getElementById('recentsList');
+            const expandButton = document.getElementById('recentsExpandButton');
+            const buttonText = expandButton.querySelector('span:first-child');
+            const buttonIcon = expandButton.querySelector('.material-icons');
+            
+            if (recentsList.classList.contains('expanded')) {
+                // Collapse
+                recentsList.classList.remove('expanded');
+                expandButton.classList.remove('expanded');
+                buttonText.textContent = 'Show more';
+                buttonIcon.textContent = 'expand_more';
+            } else {
+                // Expand
+                recentsList.classList.add('expanded');
+                expandButton.classList.add('expanded');
+                buttonText.textContent = 'Show less';
+                buttonIcon.textContent = 'expand_less';
+            }
         }
 
         function playRecentTrack(element) {
@@ -3393,6 +3489,12 @@
         // Call updateRecentsList when page loads
         document.addEventListener('DOMContentLoaded', () => {
             updateRecentsList();
+            
+            // Setup recents expand button
+            const recentsExpandButton = document.getElementById('recentsExpandButton');
+            if (recentsExpandButton) {
+                recentsExpandButton.addEventListener('click', toggleRecentsExpansion);
+            }
             
             // Create test playlist if none exist
             const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
@@ -3451,6 +3553,11 @@
                     });
                 }
             }, 500);
+            
+            // Check overflow on window resize
+            window.addEventListener('resize', () => {
+                setTimeout(checkRecentsOverflow, 100);
+            });
         });
 
         // Add this to your existing JavaScript
