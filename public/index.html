@@ -823,6 +823,18 @@
             left: 40px;
             right: 40px;
             max-height: calc(100vh - 350px);
+            overflow-y: auto;
+            background: rgba(36, 36, 36, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            z-index: 90;
+            display: none;
+            padding: 10px;
+        }
+
+        .search-page .search-results.active {
+            display: block;
         }
 
         .library-header {
@@ -2489,8 +2501,17 @@
             clearTimeout(searchTimeout);
             const query = e.target.value.trim();
             
+            // Check if we're on search page
+            const searchPage = document.querySelector('.search-page');
+            const isSearchPageActive = searchPage && searchPage.classList.contains('active');
+            
             if (query.length < 2) {
                 searchResults.classList.remove('active');
+                return;
+            }
+
+            // Only show results if on search page
+            if (!isSearchPageActive) {
                 return;
             }
 
@@ -2525,9 +2546,12 @@
             }, 300);
         });
 
-        // Close search results when clicking outside
+        // Close search results when clicking outside (only on search page)
         document.addEventListener('click', (e) => {
-            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+            const searchPage = document.querySelector('.search-page');
+            const isSearchPageActive = searchPage && searchPage.classList.contains('active');
+            
+            if (isSearchPageActive && !searchInput.contains(e.target) && !searchResults.contains(e.target)) {
                 searchResults.classList.remove('active');
             }
         });
@@ -3228,6 +3252,8 @@
                 homePage.classList.add('active');
                 searchPage.classList.remove('active');
                 libraryPage.classList.remove('active');
+                // Clear search results when leaving search page
+                searchResults.classList.remove('active');
             });
 
             searchButton.addEventListener('click', () => {
@@ -3237,6 +3263,10 @@
                 homePage.classList.remove('active');
                 searchPage.classList.add('active');
                 libraryPage.classList.remove('active');
+                // Focus on search input when entering search page
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 100);
             });
 
             libraryButton.addEventListener('click', () => {
@@ -3246,6 +3276,8 @@
                 homePage.classList.remove('active');
                 searchPage.classList.remove('active');
                 libraryPage.classList.add('active');
+                // Clear search results when leaving search page
+                searchResults.classList.remove('active');
             });
         });
 
