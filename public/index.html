@@ -2479,20 +2479,17 @@
         </div>
     </div>
 
-    <div class="mini-player">
+    <div class="mini-player" id="miniPlayer">
         <div class="album-cover"></div>
         <div class="track-info">
-            <div class="track-name">Song Title</div>
-            <div class="artist-name">Artist Name</div>
+            <div class="track-name">Choose a track</div>
+            <div class="artist-name">Levisty</div>
         </div>
         <div class="player-controls">
-            <button class="control-button" id="miniSkipNextButton">
-                <span class="material-icons">skip_next</span>
-            </button>
             <button class="control-button" id="playPauseButton">
                 <div class="play-pause-container">
-                    <span class="material-icons play-pause-icon play active">play_arrow</span>
-                    <span class="material-icons play-pause-icon pause inactive">pause</span>
+                    <span class="play-pause-icon play active material-icons">play_arrow</span>
+                    <span class="play-pause-icon pause inactive material-icons">pause</span>
                 </div>
             </button>
         </div>
@@ -2667,29 +2664,6 @@
 
         // Track if pause was user-initiated
         let userInitiatedPause = false;
-        
-        // Android compatibility: track user interaction
-        let userHasInteracted = false;
-        const isAndroid = /Android/i.test(navigator.userAgent);
-        
-        // Add click listener to activate media context on Android
-        if (isAndroid) {
-            document.addEventListener('click', function activateMediaContext() {
-                if (!userHasInteracted) {
-                    userHasInteracted = true;
-                    console.log('Android: User interaction detected, media context activated');
-                    
-                    // Create a silent audio context to activate media
-                    try {
-                        const audio = new Audio();
-                        audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
-                        audio.play().catch(() => {});
-                    } catch (e) {
-                        console.log('Silent audio activation failed:', e);
-                    }
-                }
-            }, { once: false });
-        }
         
         function onPlayerStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
@@ -2981,46 +2955,10 @@
             // Update video background and play immediately
             if (isPlayerReady && player) {
                 try {
-                    const isAndroid = /Android/i.test(navigator.userAgent);
-                    
-                    if (isAndroid) {
-                        console.log('Android device detected, using loadVideoById for better compatibility');
-                        // For Android, use loadVideoById which is more reliable
-                        player.loadVideoById(video.id);
-                        
-                        // Add a small delay to ensure video is loaded before attempting to play
-                        setTimeout(() => {
-                            try {
-                                player.playVideo();
-                                console.log('Android video play attempted after load');
-                            } catch (playError) {
-                                console.error('Android play after load failed:', playError);
-                            }
-                        }, 800);
-                    } else {
-                        // For other platforms, use loadVideoById which auto-plays
-                        player.loadVideoById(video.id);
-                    }
-                    
+                    player.loadVideoById(video.id);
                     document.querySelector('.video-background').classList.add('active');
                 } catch (error) {
                     console.error('Error loading video:', error);
-                    
-                    // Fallback for Android devices
-                    const isAndroid = /Android/i.test(navigator.userAgent);
-                    if (isAndroid) {
-                        console.log('Android fallback: trying cueVideoById + play');
-                        setTimeout(() => {
-                            try {
-                                player.cueVideoById(video.id);
-                                setTimeout(() => {
-                                    player.playVideo();
-                                }, 500);
-                            } catch (fallbackError) {
-                                console.error('Android fallback failed:', fallbackError);
-                            }
-                        }, 1000);
-                    }
                 }
             } else {
                 console.error('Player not ready');
@@ -3045,75 +2983,16 @@
         function togglePlayPause() {
             if (!player || !currentVideoId) return;
             
-            // For Android devices, ensure user interaction is registered
-            if (isAndroid && !userHasInteracted) {
-                userHasInteracted = true;
-                console.log('Android: Play button interaction detected, activating media context');
-            }
-            
             try {
                 if (isPlaying) {
-                    userInitiatedPause = true; // Mark as user-initiated pause
+                    userInitiatedPause = true;
                     player.pauseVideo();
                 } else {
-                    userInitiatedPause = false; // User wants to play
-                    
-                    // Enhanced Android compatibility
-                    if (isAndroid) {
-                        console.log('Android device detected, using enhanced play handling');
-                        
-                        // First attempt: direct play
-                        try {
-                            player.playVideo();
-                        } catch (firstAttemptError) {
-                            console.log('Android first play attempt failed:', firstAttemptError);
-                        }
-                        
-                        // Second attempt with delay
-                        setTimeout(() => {
-                            if (!isPlaying && player) {
-                                console.log('Retrying play for Android...');
-                                try {
-                                    player.playVideo();
-                                } catch (retryError) {
-                                    console.error('Android retry failed, trying reload approach:', retryError);
-                                    // Third attempt: reload video
-                                    setTimeout(() => {
-                                        try {
-                                            if (currentVideoId && player) {
-                                                player.loadVideoById(currentVideoId);
-                                            }
-                                        } catch (reloadError) {
-                                            console.error('Android reload approach failed:', reloadError);
-                                        }
-                                    }, 500);
-                                }
-                            }
-                        }, 300);
-                    } else {
-                        // For non-Android devices, simple play
-                        player.playVideo();
-                    }
+                    userInitiatedPause = false;
+                    player.playVideo();
                 }
             } catch (error) {
                 console.error('Error toggling play/pause:', error);
-                
-                // Additional error handling for Android
-                if (isAndroid && !isPlaying) {
-                    console.log('Android playback error, trying alternative approach...');
-                    setTimeout(() => {
-                        try {
-                            if (player && currentVideoId) {
-                                player.cueVideoById(currentVideoId);
-                                setTimeout(() => {
-                                    player.playVideo();
-                                }, 800);
-                            }
-                        } catch (altError) {
-                            console.error('Alternative Android approach failed:', altError);
-                        }
-                    }, 1000);
-                }
             }
         }
 
