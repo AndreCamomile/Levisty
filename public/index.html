@@ -1127,6 +1127,7 @@
             width: 100%;
             background: transparent;
             scroll-padding: 0;
+            min-height: 200px;
         }
 
         .recents-title {
@@ -1155,11 +1156,9 @@
         }
 
         .recents-list.expanded {
-            max-height: calc(100vh - 200px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+            max-height: none;
+            overflow: visible;
+            padding-bottom: 60px;
         }
 
         @media (max-width: 768px) {
@@ -1239,6 +1238,45 @@
 
         .recents-expand-button.hidden {
             display: none;
+        }
+
+        .recents-collapse-button {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-top: 20px;
+        }
+
+        .recents-collapse-button.visible {
+            display: flex;
+        }
+
+        .recents-collapse-button:hover {
+            background: rgba(36, 36, 36, 0.9);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(-50%) translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .recents-collapse-button .material-icons {
+            font-size: 16px;
         }
 
         .recent-item {
@@ -2333,6 +2371,10 @@
                     <span>Show more</span>
                     <span class="material-icons">expand_more</span>
                 </button>
+                <button class="recents-collapse-button" id="recentsCollapseButton">
+                    <span class="material-icons">expand_less</span>
+                    <span>Show less</span>
+                </button>
             </div>
         </div>
 
@@ -3425,9 +3467,11 @@
         function checkRecentsOverflow() {
             const recentsList = document.getElementById('recentsList');
             const expandButton = document.getElementById('recentsExpandButton');
+            const collapseButton = document.getElementById('recentsCollapseButton');
             
             // Reset to collapsed state to measure
             recentsList.classList.remove('expanded');
+            collapseButton.classList.remove('visible');
             
             // Calculate if content overflows
             const listHeight = recentsList.scrollHeight;
@@ -3440,25 +3484,30 @@
             }
         }
 
-        function toggleRecentsExpansion() {
+        function expandRecents() {
             const recentsList = document.getElementById('recentsList');
             const expandButton = document.getElementById('recentsExpandButton');
-            const buttonText = expandButton.querySelector('span:first-child');
-            const buttonIcon = expandButton.querySelector('.material-icons');
+            const collapseButton = document.getElementById('recentsCollapseButton');
             
-            if (recentsList.classList.contains('expanded')) {
-                // Collapse
-                recentsList.classList.remove('expanded');
-                expandButton.classList.remove('expanded');
-                buttonText.textContent = 'Show more';
-                buttonIcon.textContent = 'expand_more';
-            } else {
-                // Expand
-                recentsList.classList.add('expanded');
-                expandButton.classList.add('expanded');
-                buttonText.textContent = 'Show less';
-                buttonIcon.textContent = 'expand_less';
-            }
+            recentsList.classList.add('expanded');
+            expandButton.classList.add('hidden');
+            collapseButton.classList.add('visible');
+        }
+
+        function collapseRecents() {
+            const recentsList = document.getElementById('recentsList');
+            const expandButton = document.getElementById('recentsExpandButton');
+            const collapseButton = document.getElementById('recentsCollapseButton');
+            
+            recentsList.classList.remove('expanded');
+            expandButton.classList.remove('hidden');
+            collapseButton.classList.remove('visible');
+            
+            // Scroll back to recents section
+            document.querySelector('.recents-section').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
         }
 
         function playRecentTrack(element) {
@@ -3490,10 +3539,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateRecentsList();
             
-            // Setup recents expand button
+            // Setup recents expand/collapse buttons
             const recentsExpandButton = document.getElementById('recentsExpandButton');
+            const recentsCollapseButton = document.getElementById('recentsCollapseButton');
+            
             if (recentsExpandButton) {
-                recentsExpandButton.addEventListener('click', toggleRecentsExpansion);
+                recentsExpandButton.addEventListener('click', expandRecents);
+            }
+            
+            if (recentsCollapseButton) {
+                recentsCollapseButton.addEventListener('click', collapseRecents);
             }
             
             // Create test playlist if none exist
