@@ -31,12 +31,12 @@ def search_videos(query):
                 for video in search.results[:10]:
                     if video and hasattr(video, 'video_id'):
                         try:
-                        videos.append({
-                            'id': video.video_id,
+                            videos.append({
+                                'id': video.video_id,
                                 'title': video.title or 'Untitled',
                                 'channel': video.author or 'Unknown Channel',
-                            'thumbnail': f'https://img.youtube.com/vi/{video.video_id}/mqdefault.jpg'
-                        })
+                                'thumbnail': f'https://img.youtube.com/vi/{video.video_id}/mqdefault.jpg'
+                            })
                         except Exception as video_error:
                             print(f"⚠️ Skipping video due to error: {video_error}", file=sys.stderr)
                             continue
