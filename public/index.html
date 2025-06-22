@@ -39,15 +39,15 @@
         }
 
         .content {
-            padding: 20px;
+            padding: 40px;
             padding-bottom: 160px;
         }
 
         .mini-player {
             position: fixed;
             bottom: 100px;
-            left: 20px;
-            right: 20px;
+            left: 40px;
+            right: 40px;
             background-color: rgba(26, 26, 26, 0.8);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -277,7 +277,7 @@
             align-items: center;
             gap: 10px;
             margin: 20px auto;
-            padding: 0 20px;
+            padding: 0 40px;
             box-sizing: border-box;
         }
 
@@ -425,7 +425,7 @@
             left: 0;
             right: 0;
             background-color: #0a0a0a;
-            padding: 12px 0;
+            padding: 8px 0;
             border-top: 1px solid #1a1a1a;
             display: flex;
             justify-content: space-around;
@@ -437,16 +437,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             background: none;
             border: none;
             color: #808080;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
-            padding: 8px 16px;
+            padding: 6px 12px;
             transition: all 0.15s ease;
-            min-width: 80px;
+            min-width: 60px;
             position: relative;
             -webkit-tap-highlight-color: transparent;
         }
@@ -511,8 +511,8 @@
         /* --- SEARCH BAR STYLES --- */
         .search-container {
             position: fixed;
-            top: 20px;
-            left: 20px;
+            top: 100px;
+            left: 40px;
             z-index: 300;
         }
 
@@ -520,25 +520,37 @@
             position: relative;
             width: 50px;
             height: 50px;
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             cursor: pointer;
+            transition: all 0.3s ease;
             overflow: hidden;
+        }
+
+        .search-bar:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-bar:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .search-bar.expanded {
             width: 300px;
             border-radius: 25px;
+            transform: none;
         }
 
-        .search-bar:active {
-            transform: scale(0.98);
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        .search-bar.expanded:hover {
+            transform: none;
+            background: rgba(255, 255, 255, 0.15);
         }
 
         .search-input {
@@ -566,7 +578,7 @@
         }
 
         .search-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgb(255, 255, 255);
             transition: transform 0.2s ease, opacity 0.2s ease;
             font-size: 18px;
         }
@@ -576,7 +588,7 @@
             left: 50%;
             top: 50%;
             transform: translate(-50%, -50%);
-            color: rgba(255, 255, 255, 0.7);
+            color: #fff;
             pointer-events: none;
             transition: all 0.3s ease;
             z-index: 2;
@@ -594,7 +606,7 @@
 
         @supports not (backdrop-filter: blur(10px)) {
             .search-bar {
-                background: rgba(36, 36, 36, 0.8);
+                background: rgb(255, 255, 255);
             }
         }
 
@@ -605,7 +617,7 @@
             left: 50%;
             width: 5px;
             height: 5px;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgb(255, 255, 255);
             opacity: 0;
             border-radius: 100%;
             transform: scale(1, 1) translate(-50%, -50%);
@@ -629,10 +641,10 @@
 
         .search-results {
             position: fixed;
-            top: 90px;
-            left: 20px;
-            right: 20px;
-            max-height: calc(100vh - 200px);
+            top: 170px;
+            left: 40px;
+            right: 40px;
+            max-height: calc(100vh - 280px);
             overflow-y: auto;
             background: rgba(36, 36, 36, 0.95);
             backdrop-filter: blur(10px);
@@ -770,6 +782,49 @@
             display: block;
         }
 
+        .search-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000000;
+            z-index: 900;
+            display: none;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .search-page.active {
+            display: block;
+        }
+
+        .search-page-welcome {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            padding: 10px 0 0 0;
+            position: absolute;
+            top: 85px;
+            left: 40px !important;
+        }
+
+        .search-page .search-container {
+            position: absolute;
+            top: 170px;
+            left: 40px;
+        }
+
+        .search-page .search-results {
+            position: absolute;
+            top: 240px;
+            left: 40px;
+            right: 40px;
+            max-height: calc(100vh - 350px);
+        }
+
         .library-header {
             display: flex;
             align-items: center;
@@ -794,17 +849,16 @@
             font-size: 32px;
             font-weight: bold;
             color: #fff;
-            padding: 35px;
-            padding-bottom: 0;
+            padding: 10px 0 0 0;
             position: absolute;
-            top: 45px;
-            left: 0;
+            top: 85px;
+            left: 40px !important;
         }
 
         .library-add-button {
             position: absolute;
-            left: 35px;
-            top: 130px;
+            left: 40px;
+            top: 170px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -817,8 +871,8 @@
             justify-content: center;
             transition: all 0.3s ease;
             font-size: 24px;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             z-index: 10;
@@ -1045,32 +1099,33 @@
         }
 
         .recents-section {
-            margin-top: 80px;
+            position: absolute;
+            top: 170px;
+            left: 0;
+            right: 0;
             padding: 0;
             overflow: visible;
             width: 100%;
-            position: relative;
             background: transparent;
             scroll-padding: 0;
         }
 
         .recents-title {
-            font-size: 24px;
+            font-size: 32px;
             font-weight: bold;
             color: #fff;
-            margin-bottom: 20px;
-            margin-left: 20px;
-            position: sticky;
-            left: 20px;
+            padding: 10px 0 0 0;
+            position: absolute;
+            top: 85px;
+            left: 40px !important;
             background: transparent;
             z-index: 1;
-            padding: 10px 0;
         }
 
         .recents-list {
             display: flex;
             gap: 20px;
-            padding: 0 20px 20px 20px;
+            padding: 0 40px 20px 40px;
             overflow-x: auto;
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
@@ -1191,16 +1246,16 @@
 
         .playlists-container {
             position: absolute;
-            top: 190px;
+            top: 270px;
             left: 0;
             right: 0;
-            padding: 0 35px;
+            padding: 0 40px;
             padding-bottom: 280px;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 25px;
             overflow-y: auto;
-            max-height: calc(100vh - 190px);
+            max-height: calc(100vh - 270px);
             -webkit-overflow-scrolling: touch;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
@@ -1758,32 +1813,7 @@
             background: rgba(255, 255, 255, 0.5);
         }
 
-        .playlist-details-close {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
 
-        .playlist-details-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
 
         .playlist-details-cover {
             width: 300px;
@@ -1927,7 +1957,7 @@
             width: 100%;
             max-width: 600px;
             margin-top: 30px;
-            padding: 0 20px;
+            padding: 0 40px;
         }
 
         .tracks-header {
@@ -2154,9 +2184,7 @@
     <!-- Add this before the closing body tag -->
     <div class="playlist-details-modal">
         <div class="playlist-details-content">
-            <button class="playlist-details-close">
-                <span class="material-icons">close</span>
-            </button>
+
             <button class="playlist-details-menu" onclick="togglePlaylistMenu(event)" style="display: none;">
                 <span class="material-icons">more_vert</span>
                 <div class="playlist-menu-dropdown">
@@ -2181,23 +2209,10 @@
 
     <div class="content">
         <div class="home-page active">
-            <div class="search-header">
-                <div class="search-container">
-                    <div class="search-bar">
-                        <div class="search-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
-                            </svg>
-                        </div>
-                        <input type="text" class="search-input" placeholder="Search for music..." id="searchInput">
-                    </div>
-                </div>
-            </div>
+            <div class="recents-title">Recents</div>
             <div class="recents-section" id="recentsSection">
-                <div class="recents-title">Recents</div>
                 <div class="recents-list" id="recentsList"></div>
             </div>
-            <div class="search-results" id="searchResults"></div>
         </div>
 
         <div class="library-page">
@@ -2213,6 +2228,23 @@
             <div class="playlists-container" id="playlistsContainer">
                 <!-- Playlists will be added here dynamically -->
             </div>
+        </div>
+
+        <div class="search-page">
+            <div class="search-page-welcome">Search</div>
+            <div class="search-header">
+                <div class="search-container">
+                    <div class="search-bar">
+                        <div class="search-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" class="search-input" placeholder="Search for music..." id="searchInput">
+                    </div>
+                </div>
+            </div>
+            <div class="search-results" id="searchResults"></div>
         </div>
     </div>
 
@@ -2287,6 +2319,10 @@
             <span class="nav-icon">home</span>
             Home
         </button>
+        <button class="nav-button" data-section="search">
+            <span class="nav-icon">search</span>
+            Search
+        </button>
         <button class="nav-button" data-section="library">
             <span class="nav-icon">᯽</span>
             Library
@@ -2315,10 +2351,7 @@
 
     <div class="create-playlist-modal" id="ytPlaylistModal">
         <div class="create-playlist-content">
-            <div class="create-playlist-title">
-                <span class="material-icons" style="font-size: 32px; margin-right: 10px; vertical-align: middle;">youtube_searched_for</span>
-                Import YouTube / YouTube Music Playlist
-            </div>
+            
             <div class="form-group">
                 <label for="ytPlaylistUrl">
                     <span class="material-icons" style="font-size: 18px; margin-right: 8px; vertical-align: middle;">link</span>
@@ -2536,6 +2569,8 @@
             searchResults.appendChild(resultList);
             searchResults.classList.add('active');
         }
+
+
 
         async function playVideo(video) {
             if (!video || !video.id) {
@@ -3180,25 +3215,37 @@
         // Navigation
         document.addEventListener('DOMContentLoaded', () => {
             const homeButton = document.querySelector('.nav-button[data-section="home"]');
+            const searchButton = document.querySelector('.nav-button[data-section="search"]');
             const libraryButton = document.querySelector('.nav-button[data-section="library"]');
             const homePage = document.querySelector('.home-page');
+            const searchPage = document.querySelector('.search-page');
             const libraryPage = document.querySelector('.library-page');
-            const searchContainer = document.querySelector('.search-container');
 
             homeButton.addEventListener('click', () => {
                 homeButton.classList.add('active');
+                searchButton.classList.remove('active');
                 libraryButton.classList.remove('active');
                 homePage.classList.add('active');
+                searchPage.classList.remove('active');
                 libraryPage.classList.remove('active');
-                searchContainer.style.display = 'block';
+            });
+
+            searchButton.addEventListener('click', () => {
+                searchButton.classList.add('active');
+                homeButton.classList.remove('active');
+                libraryButton.classList.remove('active');
+                homePage.classList.remove('active');
+                searchPage.classList.add('active');
+                libraryPage.classList.remove('active');
             });
 
             libraryButton.addEventListener('click', () => {
                 libraryButton.classList.add('active');
                 homeButton.classList.remove('active');
-                libraryPage.classList.add('active');
+                searchButton.classList.remove('active');
                 homePage.classList.remove('active');
-                searchContainer.style.display = 'none';
+                searchPage.classList.remove('active');
+                libraryPage.classList.add('active');
             });
         });
 
@@ -3371,7 +3418,7 @@
 
             try {
                 // Show loading state
-                importButton.textContent = 'Importing...';
+                importButton.textContent = 'Wait...';
                 importButton.disabled = true;
                 urlInput.disabled = true;
 
@@ -3777,16 +3824,20 @@
             // Show modal with animation
             modal.classList.add('active');
 
-            // Add close handler
-            const closeButton = modal.querySelector('.playlist-details-close');
-            closeButton.onclick = () => {
-                modal.classList.remove('active');
-                // Hide dropdown if open
-                const dropdown = modal.querySelector('.playlist-menu-dropdown');
-                dropdown.classList.remove('active');
-                // Clear Telegram buttons
-                clearTelegramPlaylistButtons();
-            };
+            // Show Telegram Back Button
+            if (window.Telegram?.WebApp?.BackButton) {
+                window.Telegram.WebApp.BackButton.show();
+                window.Telegram.WebApp.BackButton.onClick(() => {
+                    modal.classList.remove('active');
+                    // Hide dropdown if open
+                    const dropdown = modal.querySelector('.playlist-menu-dropdown');
+                    dropdown.classList.remove('active');
+                    // Clear Telegram buttons
+                    clearTelegramPlaylistButtons();
+                    // Hide Back Button
+                    window.Telegram.WebApp.BackButton.hide();
+                });
+            }
 
             // Close on click outside
             modal.onclick = (e) => {
@@ -3797,6 +3848,10 @@
                     dropdown.classList.remove('active');
                     // Clear Telegram buttons
                     clearTelegramPlaylistButtons();
+                    // Hide Back Button
+                    if (window.Telegram?.WebApp?.BackButton) {
+                        window.Telegram.WebApp.BackButton.hide();
+                    }
                 }
             };
         }
@@ -4085,6 +4140,8 @@
             tg.MainButton.offClick();
             tg.SettingsButton.hide();
             tg.SettingsButton.offClick();
+            tg.BackButton.hide();
+            tg.BackButton.offClick();
             currentPlaylistForMenu = null;
         }
 
@@ -4110,6 +4167,11 @@
                 const modal = document.querySelector('.playlist-details-modal');
                 modal.classList.remove('active');
                 clearTelegramPlaylistButtons();
+                
+                // Hide Back Button
+                if (window.Telegram?.WebApp?.BackButton) {
+                    window.Telegram.WebApp.BackButton.hide();
+                }
                 
                 // Show success
                 tg.showAlert(`✅ "${playlist.name}" deleted successfully`);
