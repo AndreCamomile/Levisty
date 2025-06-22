@@ -1118,15 +1118,12 @@
         }
 
         .recents-section {
-            position: absolute;
-            top: 170px;
-            left: 0;
-            right: 0;
+            margin-top: 130px;
             padding: 0;
             overflow: visible;
             width: 100%;
             background: transparent;
-            scroll-padding: 0;
+            position: relative;
             min-height: 200px;
         }
 
@@ -1134,10 +1131,8 @@
             font-size: 32px;
             font-weight: bold;
             color: #fff;
-            padding: 10px 0 0 0;
-            position: absolute;
-            top: 85px;
-            left: 40px !important;
+            padding: 10px 0 20px 0;
+            margin-left: 40px;
             background: transparent;
             z-index: 1;
         }
@@ -1200,8 +1195,8 @@
 
         .recents-expand-button {
             position: absolute;
-            bottom: 10px;
-            right: 50px;
+            bottom: -50px;
+            right: 10px;
             background: rgba(26, 26, 26, 0.9);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -1241,10 +1236,8 @@
         }
 
         .recents-collapse-button {
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+            position: static;
+            margin: 20px auto 0;
             background: rgba(26, 26, 26, 0.9);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -1261,7 +1254,6 @@
             gap: 6px;
             z-index: 10;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            margin-top: 20px;
         }
 
         .recents-collapse-button.visible {
@@ -2371,10 +2363,12 @@
                     <span>Show more</span>
                     <span class="material-icons">expand_more</span>
                 </button>
-                <button class="recents-collapse-button" id="recentsCollapseButton">
-                    <span class="material-icons">expand_less</span>
-                    <span>Show less</span>
-                </button>
+                <div style="display: flex; justify-content: center; width: 100%;">
+                    <button class="recents-collapse-button" id="recentsCollapseButton">
+                        <span class="material-icons">expand_less</span>
+                        <span>Show less</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -3503,8 +3497,8 @@
             expandButton.classList.remove('hidden');
             collapseButton.classList.remove('visible');
             
-            // Scroll back to recents section
-            document.querySelector('.recents-section').scrollIntoView({ 
+            // Scroll back to recents title
+            document.querySelector('.recents-title').scrollIntoView({ 
                 behavior: 'smooth', 
                 block: 'start' 
             });
