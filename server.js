@@ -115,6 +115,45 @@ app.get('/stream/:videoId', (req, res) => {
     });
 });
 
+// Download MP3 endpoint for sharing
+app.get('/download/:videoId', (req, res) => {
+    const videoId = req.params.videoId;
+    console.log('Download MP3 for video:', videoId);
+
+    // Set headers for MP3 download
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Disposition', `attachment; filename="${videoId}.mp3"`);
+    res.setHeader('Cache-Control', 'no-cache');
+
+    const pythonProcess = spawn('python3', ['download_mp3.py', videoId]);
+    let error = '';
+
+    // Handle errors
+    pythonProcess.stderr.on('data', (data) => {
+        error += data.toString();
+        console.error(`Download error: ${data}`);
+    });
+
+    // Stream the MP3 data
+    pythonProcess.stdout.pipe(res);
+
+    // Handle process completion
+    pythonProcess.on('close', (code) => {
+        if (code !== 0) {
+            console.error('Download process exited with code:', code);
+            console.error('Error output:', error);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Download failed', details: error });
+            }
+        }
+    });
+
+    // Handle client disconnect
+    req.on('close', () => {
+        pythonProcess.kill();
+    });
+});
+
 app.post('/import-playlist', async (req, res) => {
     try {
         const { url } = req.body;
