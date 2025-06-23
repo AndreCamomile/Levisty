@@ -3628,6 +3628,8 @@
                         shareCurrentTrack();
                     });
                 }
+
+
             }, 500);
             
             // Check overflow on window resize
@@ -4280,289 +4282,31 @@
         function shareCurrentTrack() {
             if (!currentVideoId) {
                 console.log('No track to share');
-                showShareNotification('❌ No track to share', 'error');
                 return;
             }
 
             const trackTitle = document.querySelector('.track-name').textContent;
-            const artistName = document.querySelector('.artist-name').textContent;
+            const shareText = `@levisty_bot ${trackTitle}`;
+            const videoUrl = `https://youtube.com/watch?v=${currentVideoId}`;
             
-            // Create share message
-            const shareMessage = `@levisty_bot ${trackTitle}`;
-            
-            // Use Telegram WebApp API to share
+            // Use Telegram WebApp to share
             if (window.Telegram?.WebApp) {
                 const tg = window.Telegram.WebApp;
-                console.log('Sharing via Telegram WebApp');
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(videoUrl)}&text=${encodeURIComponent(shareText)}`;
                 
-                try {
-                    // Create MP3 download URL
-                    const mp3Url = `${window.location.origin}/download/${currentVideoId}`;
-                    
-                    // Option 1: Try to show a popup with share options
-                    if (tg.showPopup) {
-                        console.log('Showing Telegram popup with share options');
-                        tg.showPopup({
-                            title: '🎵 Share Track',
-                            message: `Share "${trackTitle}" as MP3 audio file!`,
-                            buttons: [
-                                {
-                                    id: 'share_audio',
-                                    type: 'default',
-                                    text: '🎵 Share Audio File'
-                                },
-                                {
-                                    id: 'share_link',
-                                    type: 'default', 
-                                    text: '🔗 Share Link'
-                                },
-                                {
-                                    type: 'cancel'
-                                }
-                            ]
-                        }, (buttonId) => {
-                            if (buttonId === 'share_audio') {
-                                shareAudioFile(mp3Url, shareMessage, trackTitle);
-                            } else if (buttonId === 'share_link') {
-                                const videoUrl = `https://youtube.com/watch?v=${currentVideoId}`;
-                                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(videoUrl)}&text=${encodeURIComponent(shareMessage)}`;
-                                if (tg.openTelegramLink) {
-                                    tg.openTelegramLink(shareUrl);
-                                } else {
-                                    window.open(shareUrl, '_blank');
-                                }
-                            }
-                        });
-                        return;
-                    }
-                    
-                    // Option 2: Direct audio file share
-                    shareAudioFile(mp3Url, shareMessage, trackTitle);
-                    
-                } catch (error) {
-                    console.error('Telegram share error:', error);
-                    shareAudioFallback(shareMessage, trackTitle);
-                }
-            } else {
-                // For non-Telegram environments
-                console.log('Not in Telegram WebApp, using fallback share');
-                shareAudioFallback(shareMessage, trackTitle);
-            }
-        }
-
-        function shareAudioFile(mp3Url, shareMessage, trackTitle) {
-            const tg = window.Telegram?.WebApp;
-            
-            try {
-                // Try to use Telegram's file sharing capabilities
-                if (tg && tg.sendData) {
-                    // Send audio file data to bot
-                    const shareData = {
-                        type: 'audio',
-                        url: mp3Url,
-                        title: trackTitle,
-                        message: shareMessage
-                    };
-                    tg.sendData(JSON.stringify(shareData));
-                    showShareNotification('🎵 Sending audio file...', 'info');
-                } else if (navigator.share) {
-                    // Use Web Share API with file
-                    downloadAndShareFile(mp3Url, trackTitle, shareMessage);
+                if (tg.openTelegramLink) {
+                    tg.openTelegramLink(shareUrl);
                 } else {
-                    // Fallback to download link
-                    const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(mp3Url)}&text=${encodeURIComponent(shareMessage + '\n\n🎵 Download MP3:')}`;
-                    if (tg && tg.openTelegramLink) {
-                        tg.openTelegramLink(shareUrl);
-                    } else {
-                        window.open(shareUrl, '_blank');
-                    }
-                    showShareNotification('📤 Opening share with download link...', 'info');
+                    window.open(shareUrl, '_blank');
                 }
-            } catch (error) {
-                console.error('Audio share error:', error);
-                shareAudioFallback(shareMessage, trackTitle);
-            }
-        }
-
-        async function downloadAndShareFile(mp3Url, trackTitle, shareMessage) {
-            try {
-                showShareNotification('⏳ Preparing audio file...', 'info');
-                
-                // Download the MP3 file
-                const response = await fetch(mp3Url);
-                if (!response.ok) throw new Error('Failed to download audio');
-                
-                const blob = await response.blob();
-                const file = new File([blob], `${trackTitle}.mp3`, { type: 'audio/mpeg' });
-                
-                // Share using Web Share API
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: `🎵 ${trackTitle}`,
-                        text: shareMessage,
-                        files: [file]
-                    });
-                    showShareNotification('✅ Audio file shared successfully!', 'success');
-                } else {
-                    // Fallback: create download link
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `${trackTitle}.mp3`;
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    showShareNotification('💾 MP3 file downloaded! Share manually in Telegram', 'success');
-                }
-            } catch (error) {
-                console.error('File download/share error:', error);
-                showShareNotification('❌ Failed to prepare audio file', 'error');
-                shareAudioFallback(shareMessage, trackTitle);
-            }
-        }
-
-        function shareAudioFallback(shareMessage, trackTitle) {
-            // Fallback: copy download link
-            const mp3Url = `${window.location.origin}/download/${currentVideoId}`;
-            const shareText = `${shareMessage}\n\n🎵 Download MP3: ${mp3Url}`;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareText).then(() => {
-                    showShareNotification('📋 Download link copied! Share in Telegram', 'success');
-                }).catch(() => {
-                    copyToClipboardFallback(shareText);
-                });
             } else {
-                copyToClipboardFallback(shareText);
+                // Fallback for non-Telegram environments
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(videoUrl)}&text=${encodeURIComponent(shareText)}`;
+                window.open(shareUrl, '_blank');
             }
         }
 
-        function tryWebShare(shareMessage, trackTitle, videoId) {
-            if (navigator.share) {
-                navigator.share({
-                    title: `🎵 ${trackTitle}`,
-                    text: shareMessage,
-                    url: `https://youtube.com/watch?v=${videoId}`
-                }).then(() => {
-                    showShareNotification('✅ Shared successfully!', 'success');
-                }).catch(err => {
-                    console.log('Web Share API error:', err);
-                    fallbackShare(shareMessage, videoId);
-                });
-            } else {
-                fallbackShare(shareMessage, videoId);
-            }
-        }
-
-        function fallbackShare(message, videoId) {
-            // Copy to clipboard as fallback
-            const trackTitle = document.querySelector('.track-name').textContent;
-            const shareText = `🎵 ${message}\n\n🔗 Listen: https://youtube.com/watch?v=${videoId}\n\n📱 Get the app: @levisty_bot`;
-            
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareText).then(() => {
-                    showShareNotification('📋 Share text copied to clipboard!', 'success');
-                }).catch(() => {
-                    copyToClipboardFallback(shareText);
-                });
-            } else {
-                copyToClipboardFallback(shareText);
-            }
-        }
-
-        function copyToClipboardFallback(text) {
-            // Very old browser fallback
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.top = '0';
-            textArea.style.left = '0';
-            textArea.style.width = '2em';
-            textArea.style.height = '2em';
-            textArea.style.padding = '0';
-            textArea.style.border = 'none';
-            textArea.style.outline = 'none';
-            textArea.style.boxShadow = 'none';
-            textArea.style.background = 'transparent';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    showShareNotification('📋 Share text copied to clipboard!', 'success');
-                } else {
-                    showShareNotification('❌ Could not copy to clipboard', 'error');
-                }
-            } catch (err) {
-                console.error('Fallback copy failed:', err);
-                showShareNotification('❌ Could not copy to clipboard', 'error');
-            }
-            
-            document.body.removeChild(textArea);
-        }
-
-        function showShareNotification(message, type = 'info') {
-            // Remove any existing notification
-            const existingNotification = document.querySelector('.share-notification');
-            if (existingNotification) {
-                existingNotification.remove();
-            }
-
-            const notification = document.createElement('div');
-            notification.className = 'share-notification';
-            notification.textContent = message;
-            
-            // Styling
-            notification.style.position = 'fixed';
-            notification.style.top = '20px';
-            notification.style.left = '50%';
-            notification.style.transform = 'translateX(-50%)';
-            notification.style.padding = '12px 20px';
-            notification.style.borderRadius = '8px';
-            notification.style.fontSize = '14px';
-            notification.style.fontWeight = '500';
-            notification.style.zIndex = '9999';
-            notification.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-            notification.style.backdropFilter = 'blur(10px)';
-            notification.style.webkitBackdropFilter = 'blur(10px)';
-            notification.style.transition = 'all 0.3s ease';
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(-50%) translateY(-20px)';
-            
-            // Set colors based on type
-            if (type === 'success') {
-                notification.style.backgroundColor = 'rgba(29, 185, 84, 0.9)';
-                notification.style.color = 'white';
-            } else if (type === 'error') {
-                notification.style.backgroundColor = 'rgba(255, 59, 48, 0.9)';
-                notification.style.color = 'white';
-            } else {
-                notification.style.backgroundColor = 'rgba(0, 122, 255, 0.9)';
-                notification.style.color = 'white';
-            }
-            
-            document.body.appendChild(notification);
-            
-            // Animate in
-            setTimeout(() => {
-                notification.style.opacity = '1';
-                notification.style.transform = 'translateX(-50%) translateY(0)';
-            }, 10);
-            
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateX(-50%) translateY(-20px)';
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
-        }
+        
 
 
 
