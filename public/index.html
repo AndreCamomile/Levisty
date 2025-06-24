@@ -844,6 +844,156 @@
             display: block;
         }
 
+        /* Search History Styles */
+        .search-history {
+            position: absolute;
+            top: 240px;
+            left: 40px;
+            right: 40px;
+            max-height: calc(100vh - 350px);
+            overflow-y: auto;
+        }
+
+        .search-history.hidden {
+            display: none;
+        }
+
+        .search-history-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .search-history-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 0; /* Allows flex item to shrink below content size */
+        }
+
+        .search-history-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+
+
+        .search-history-remove {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; /* Prevents button from shrinking */
+            width: 28px;
+            height: 28px;
+        }
+
+        .search-history-remove:hover {
+            color: #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .search-history-clear {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 10px;
+        }
+
+        .search-history-clear:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #ccc;
+        }
+
+        /* Track layout for history items */
+        .search-history-track {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0; /* Allows flex item to shrink */
+            overflow: hidden; /* Prevents content from overflowing */
+        }
+
+        .search-history-thumbnail {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0; /* Prevents thumbnail from shrinking */
+        }
+
+        .search-history-track-info {
+            flex: 1;
+            min-width: 0; /* Allows text to shrink and be ellipsized */
+            overflow: hidden;
+        }
+
+        .search-history-track-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .search-history-track-channel {
+            font-size: 12px;
+            color: #888;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        /* For backward compatibility with old text-only history items */
+        .search-history-text {
+            font-size: 14px;
+            color: #cccccc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .search-history-text span:last-child {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .library-header {
             display: flex;
             align-items: center;
@@ -1106,6 +1256,16 @@
             display: block;
         }
 
+        .home-page-welcome {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            padding: 10px 0 0 0;
+            position: absolute;
+            top: 85px;
+            left: 40px !important;
+        }
+
         .search-header {
             display: flex;
             align-items: center;
@@ -1117,281 +1277,7 @@
             display: none;
         }
 
-        .recents-section {
-            margin-top: 170px;
-            padding: 0;
-            overflow: visible;
-            width: 100%;
-            background: transparent;
-            position: relative;
-            min-height: 200px;
-        }
-
-        .recents-header {
-            position: absolute;
-            top: 85px;
-            left: 40px;
-            right: 40px;
-            display: flex;
-            align-items: center;
-            z-index: 1;
-        }
-
-        .recents-title {
-            font-size: 32px;
-            font-weight: bold;
-            color: #fff;
-            padding: 10px 0 0 0;
-            background: transparent;
-            cursor: pointer;
-            user-select: none;
-            transition: color 0.2s ease;
-            position: relative;
-            display: inline-block;
-        }
-
-        .recents-title:hover {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .recents-text, .clear-text {
-            display: inline-block;
-            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .recents-text {
-            opacity: 1;
-            transform: scale(1) rotate(0deg);
-            filter: blur(0px);
-        }
-
-        .clear-text {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            transform: scale(0.8) rotate(-5deg);
-            filter: blur(3px);
-            color: #fff;
-            font-size: 32px;
-            font-weight: bold;
-            padding: 10px 0 0 0;
-        }
-
-        .recents-text.hidden {
-            opacity: 0;
-            transform: scale(1.1) rotate(5deg);
-            filter: blur(3px);
-        }
-
-        .clear-text:not(.hidden) {
-            opacity: 1;
-            transform: scale(1) rotate(0deg);
-            filter: blur(0px);
-        }
-
-        .clear-text:hover {
-            color: rgba(255, 255, 255, 0.8);
-            transform: scale(1.02) rotate(0deg);
-        }
-
-        .recents-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 20px;
-            padding: 0 40px 20px 40px;
-            width: 100%;
-            background: transparent;
-            max-height: 180px;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            position: relative;
-        }
-
-        .recents-list::after {
-            content: '';
-            position: absolute;
-            bottom: -40px;
-            left: 0;
-            right: 0;
-            height: 100px;
-            background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.9) 80%, #000000 100%);
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .recents-list.expanded {
-            max-height: 85vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 400px;
-        }
-
-        .recents-list.expanded::after {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .recents-list {
-                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-                gap: 15px;
-                padding: 0 20px 20px 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .recents-list {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-                gap: 12px;
-                padding: 0 15px 20px 15px;
-            }
-        }
-
-        .recents-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .recents-list::-webkit-scrollbar-track {
-            background: transparent;
-            margin: 4px;
-        }
-
-        .recents-list::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            border: 2px solid transparent;
-            background-clip: padding-box;
-            transition: background-color 0.2s ease;
-        }
-
-        .recents-list::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .recents-expand-button {
-            position: absolute;
-            bottom: -50px;
-            right: 10px;
-            background: rgba(26, 26, 26, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 8px 16px;
-            color: white;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            z-index: 10;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .recents-expand-button:hover {
-            background: rgba(36, 36, 36, 0.9);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-        }
-
-        .recents-expand-button .material-icons {
-            font-size: 16px;
-            transition: transform 0.3s ease;
-        }
-
-        .recents-expand-button.expanded .material-icons {
-            transform: rotate(180deg);
-        }
-
-
-
-        .recents-collapse-button {
-            position: absolute;
-            top: -95px;
-            right: 40px;
-            background: rgba(26, 26, 26, 0.9);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 8px 16px;
-            color: white;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: none;
-            align-items: center;
-            gap: 6px;
-            z-index: 10;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-
-
-        .recents-collapse-button:hover {
-            background: rgba(36, 36, 36, 0.9);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-        }
-
-        .recents-collapse-button .material-icons {
-            font-size: 16px;
-        }
-
-        .recent-item {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .recent-item:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .recent-item img {
-            width: 100%;
-            aspect-ratio: 1;
-            border-radius: 6px;
-            margin-bottom: 6px;
-            object-fit: cover;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .recent-item-title {
-            color: #fff;
-            font-weight: 600;
-            font-size: 12px;
-            margin-bottom: 2px;
-            white-space: normal;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        .recent-item-artist {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 10px;
-            white-space: normal;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+        /* Removed all recents-related styles as requested */
 
         .track-item {
             display: flex;
@@ -2006,7 +1892,7 @@
             width: 100%;
             height: 100%;
             overflow-y: auto;
-            padding: 20px;
+            padding: 60px 16px 16px 16px;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -2035,28 +1921,26 @@
 
 
         .playlist-details-cover {
-            width: 300px;
-            height: 300px;
-            min-width: 300px;
-            min-height: 300px;
-            max-width: 300px;
-            max-height: 300px;
-            border-radius: 30px;
-            margin-top: 60px;
-            margin-bottom: 30px;
+            width: 200px;
+            height: 200px;
+            min-width: 200px;
+            min-height: 200px;
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 16px;
+            margin-top: 20px;
+            margin-bottom: 35px;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-color: #1a1a1a;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 120px;
+            font-size: 80px;
             color: white;
-            transition: transform 0.3s ease;
             overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.1);
             flex-shrink: 0;
         }
 
@@ -2066,51 +1950,48 @@
 
         .playlist-details-info {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         .playlist-details-title {
-            font-size: 32px;
-            font-weight: bold;
+            font-size: 24px;
+            font-weight: 600;
             color: white;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         .playlist-details-meta {
-            font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
-            font-style: italic;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .playlist-details-tracks {
-            font-size: 14px;
+            font-size: 13px;
             color: rgba(255, 255, 255, 0.5);
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         .playlist-details-menu {
             position: absolute;
             top: 20px;
             right: 20px;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border: none;
-            background: rgba(255, 255, 255, 0.1);
+            background: transparent;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
+            transition: background 0.2s ease;
             z-index: 1;
+            opacity: 0.7;
         }
 
         .playlist-details-menu:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 1;
         }
 
         .playlist-details-menu .material-icons {
@@ -2172,67 +2053,233 @@
             background: rgba(255, 59, 48, 0.1);
         }
 
+        /* Playlist Controls */
+        .playlist-controls {
+            width: 100%;
+            max-width: 500px;
+            margin-top: 20px;
+            padding: 0 20px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .playlist-search-bar {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .playlist-search-bar:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .playlist-search-bar:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .playlist-search-bar.expanded {
+            width: 200px;
+            border-radius: 25px;
+            transform: none;
+        }
+
+        .playlist-search-bar.expanded:hover {
+            transform: none;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .playlist-search-input {
+            width: 100%;
+            height: 100%;
+            padding: 0 50px;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            outline: none;
+        }
+
+        .playlist-search-bar.expanded .playlist-search-input {
+            opacity: 1;
+            padding: 0 50px;
+        }
+
+        .playlist-search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+        }
+
+        .playlist-search-bar .material-icons {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 2;
+            font-size: 22px;
+        }
+
+        .playlist-search-bar.expanded .material-icons {
+            left: 18px;
+            transform: translateY(-50%);
+        }
+
+        .playlist-search-bar::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgb(255, 255, 255);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%, -50%);
+            transform-origin: 50% 50%;
+        }
+
+        .playlist-search-bar:active::after {
+            animation: ripple 0.6s ease-out;
+        }
+
+        .playlist-search-clear {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            transition: background 0.2s ease;
+            z-index: 3;
+        }
+
+        .playlist-search-clear:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .playlist-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 12px;
+        }
+
+        .playlist-action-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 24px;
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .playlist-action-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .playlist-action-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+
+
+        .playlist-action-btn .material-icons {
+            font-size: 24px;
+        }
+
+        .sort-btn .sort-icon {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
         .playlist-tracks-list {
             width: 100%;
-            max-width: 600px;
-            margin-top: 30px;
-            padding: 0 40px;
+            max-width: 500px;
+            margin-top: 16px;
+            padding: 0 20px;
         }
 
         .tracks-header {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            padding: 0 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 10px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            padding: 0 12px;
         }
 
         .track-item {
             display: flex;
             align-items: center;
-            padding: 12px 20px;
-            margin-bottom: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
+            padding: 8px 12px;
+            margin-bottom: 4px;
+            background: transparent;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.2s ease;
         }
 
         .track-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-1px);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .track-number {
-            width: 30px;
+            width: 24px;
             text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            font-weight: 400;
         }
 
         .track-thumbnail {
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            margin-right: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            margin-right: 12px;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            position: relative;
             flex-shrink: 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .track-thumbnail img {
@@ -2261,22 +2308,22 @@
 
         .track-info {
             flex: 1;
-            margin-right: 15px;
+            margin-right: 12px;
         }
 
         .track-title {
             color: white;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
         .track-artist {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -2298,25 +2345,22 @@
         }
 
         .track-play-btn {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border: none;
-            background: rgba(255, 255, 255, 0.1);
+            background: transparent;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            transition: background 0.2s ease;
+            opacity: 0.6;
         }
 
         .track-play-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 1;
         }
 
         .track-play-btn .material-icons {
@@ -2339,25 +2383,35 @@
         /* Mobile responsiveness */
         @media (max-width: 768px) {
             .playlist-details-cover {
-                width: 250px;
-                height: 250px;
-                min-width: 250px;
-                min-height: 250px;
-                max-width: 250px;
-                max-height: 250px;
-                margin-top: 40px;
-                margin-bottom: 20px;
-                font-size: 80px;
-                background-color: #1a1a1a;
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-                border-radius: 25px;
-                flex-shrink: 0;
+                width: 180px;
+                height: 180px;
+                min-width: 180px;
+                min-height: 180px;
+                max-width: 180px;
+                max-height: 180px;
+                margin-top: 30px;
+                margin-bottom: 16px;
+                font-size: 60px;
+                border-radius: 12px;
             }
             
+            .playlist-controls {
+                padding: 0 10px;
+                gap: 12px;
+            }
+
+            .playlist-action-btn {
+                width: 45px;
+                height: 45px;
+            }
+
+            .playlist-action-btn .material-icons {
+                font-size: 22px;
+            }
+
             .playlist-tracks-list {
                 padding: 0 10px;
+                margin-top: 12px;
             }
 
             .track-item {
@@ -2397,6 +2451,29 @@
                 font-size: 13px;
             }
         }
+
+        .playlist-controls {
+            padding: 0 10px;
+        }
+
+        .playlist-actions {
+            gap: 8px;
+            flex-wrap: nowrap;
+        }
+
+        .playlist-search-bar {
+            width: 45px;
+            height: 45px;
+        }
+
+        .playlist-search-bar.expanded {
+            width: 220px;
+        }
+
+        .playlist-action-btn {
+            width: 45px;
+            height: 45px;
+        }
     </style>
 </head>
 <body>
@@ -2407,7 +2484,6 @@
             <button class="playlist-details-menu" onclick="togglePlaylistMenu(event)" style="display: none;">
                 <span class="material-icons">more_vert</span>
                 <div class="playlist-menu-dropdown">
-
                     <div class="playlist-menu-item delete" onclick="deletePlaylist(event)">
                         <span class="material-icons">delete</span>
                         Delete Playlist
@@ -2420,6 +2496,27 @@
                 <div class="playlist-details-meta"></div>
                 <div class="playlist-details-tracks"></div>
             </div>
+            
+            <!-- Playlist Controls -->
+            <div class="playlist-controls">
+                <!-- All Action Buttons in one row -->
+                <div class="playlist-actions">
+                    <div class="playlist-search-bar" onclick="expandPlaylistSearch()">
+                        <span class="material-icons">search</span>
+                        <input type="text" class="playlist-search-input" placeholder="Search tracks..." id="playlistSearchInput">
+                        <button class="playlist-search-clear" id="clearPlaylistSearch" style="display: none;">
+                            <span class="material-icons">clear</span>
+                        </button>
+                    </div>
+                    <button class="playlist-action-btn sort-btn" id="sortTracksBtn" title="З початку" onclick="toggleSort(this)">
+                        <span class="sort-icon">1→∞</span>
+                    </button>
+                    <button class="playlist-action-btn delete-btn" id="deletePlaylistBtn" title="Delete Playlist">
+                        <span class="material-icons">delete</span>
+                    </button>
+                </div>
+            </div>
+
             <div class="playlist-tracks-list">
                 <!-- Tracks will be dynamically added here -->
             </div>
@@ -2428,22 +2525,7 @@
 
     <div class="content">
         <div class="home-page active">
-            <div class="recents-header">
-                <div class="recents-title" id="recentsTitle">
-                    <span class="recents-text" id="recentsText">Recents</span>
-                    <span class="clear-text hidden" id="clearText">Clear</span>
-                </div>
-            </div>
-            <div class="recents-section" id="recentsSection">
-                <div class="recents-list" id="recentsList"></div>
-                <button class="recents-expand-button hidden" id="recentsExpandButton">
-                    <span>Show more</span>
-                    <span class="material-icons">expand_more</span>
-                </button>
-                <button class="recents-collapse-button" id="recentsCollapseButton">
-                    <span class="material-icons">expand_less</span>
-                </button>
-            </div>
+            <div class="home-page-welcome">Home</div>
         </div>
 
         <div class="library-page">
@@ -2474,6 +2556,16 @@
                         <input type="text" class="search-input" placeholder="Search for music..." id="searchInput">
                     </div>
                 </div>
+            </div>
+            <div class="search-history" id="searchHistory">
+                <div class="search-history-title">
+                    <span class="material-icons" style="font-size: 20px;">play_circle</span>
+                    Recently played
+                </div>
+                <div class="search-history-list" id="searchHistoryList">
+                    <!-- History items will be added here dynamically -->
+                </div>
+                <button class="search-history-clear" id="clearHistoryBtn">Clear all</button>
             </div>
             <div class="search-results" id="searchResults"></div>
         </div>
@@ -2612,6 +2704,122 @@
         let currentPlaylist = [];
         let currentTrackIndex = -1;
 
+        // Search history variables
+        const searchHistory = document.querySelector('#searchHistory');
+        const searchHistoryList = document.querySelector('#searchHistoryList');
+        const clearHistoryBtn = document.querySelector('#clearHistoryBtn');
+        let searchHistoryData = JSON.parse(localStorage.getItem('playbackHistory') || '[]');
+
+        // Search history functions - now saves played tracks instead of search queries
+        function saveTrackToHistory(track) {
+            if (!track || !track.title) return;
+            
+            const historyItem = {
+                title: track.title,
+                channel: track.channel,
+                id: track.id,
+                thumbnail: track.thumbnail,
+                timestamp: Date.now()
+            };
+            
+            // Remove if already exists
+            searchHistoryData = searchHistoryData.filter(item => item.id !== track.id);
+            
+            // Add to beginning
+            searchHistoryData.unshift(historyItem);
+            
+            // Keep only last 4 tracks
+            searchHistoryData = searchHistoryData.slice(0, 4);
+            
+            // Save to localStorage
+            localStorage.setItem('playbackHistory', JSON.stringify(searchHistoryData));
+            
+            // Update display
+            displaySearchHistory();
+        }
+
+        function displaySearchHistory() {
+            searchHistoryList.innerHTML = '';
+            
+            if (searchHistoryData.length === 0) {
+                searchHistory.style.display = 'none';
+                return;
+            }
+            
+            searchHistory.style.display = 'block';
+            
+            // Limit to maximum 4 tracks
+            const limitedHistory = searchHistoryData.slice(0, 4);
+            
+            limitedHistory.forEach((track, index) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'search-history-item';
+                
+                // Handle both old string format and new object format for backwards compatibility
+                if (typeof track === 'string') {
+                    historyItem.innerHTML = `
+                        <div class="search-history-text">
+                            <span class="material-icons" style="font-size: 16px;">history</span>
+                            <span>${track}</span>
+                        </div>
+                        <button class="search-history-remove" onclick="removeFromHistory(${searchHistoryData.indexOf(track)})">
+                            <span class="material-icons" style="font-size: 16px;">close</span>
+                        </button>
+                    `;
+                    
+                    historyItem.addEventListener('click', (e) => {
+                        if (!e.target.closest('.search-history-remove')) {
+                            searchInput.value = track;
+                            searchInput.dispatchEvent(new Event('input'));
+                        }
+                    });
+                } else {
+                    historyItem.innerHTML = `
+                        <div class="search-history-track">
+                            <img src="${track.thumbnail}" alt="${track.title}" class="search-history-thumbnail">
+                            <div class="search-history-track-info">
+                                <div class="search-history-track-title">${track.title}</div>
+                                <div class="search-history-track-channel">${track.channel}</div>
+                            </div>
+                        </div>
+                        <button class="search-history-remove" onclick="removeFromHistory(${searchHistoryData.indexOf(track)})">
+                            <span class="material-icons" style="font-size: 16px;">close</span>
+                        </button>
+                    `;
+                    
+                    historyItem.addEventListener('click', (e) => {
+                        if (!e.target.closest('.search-history-remove')) {
+                            // Play the track directly
+                            playVideo(track);
+                        }
+                    });
+                }
+                
+                searchHistoryList.appendChild(historyItem);
+            });
+        }
+
+        function removeFromHistory(index) {
+            searchHistoryData.splice(index, 1);
+            localStorage.setItem('playbackHistory', JSON.stringify(searchHistoryData));
+            displaySearchHistory();
+        }
+
+        // Make removeFromHistory globally accessible
+        window.removeFromHistory = removeFromHistory;
+
+        function clearSearchHistory() {
+            searchHistoryData = [];
+            localStorage.removeItem('playbackHistory');
+            displaySearchHistory();
+        }
+
+        // Clear history button handler
+        clearHistoryBtn.addEventListener('click', clearSearchHistory);
+
+        // Initialize search history display
+        displaySearchHistory();
+
         // Load YouTube API
         function loadYouTubeAPI() {
             const tag = document.createElement('script');
@@ -2697,6 +2905,11 @@
 
         // Load YouTube API when page loads
         loadYouTubeAPI();
+        
+        // Add diagnostic logging
+        console.log('Levisty app loaded successfully');
+        console.log('playVideo function exists:', typeof playVideo === 'function');
+        console.log('togglePlayPause function exists:', typeof togglePlayPause === 'function');
 
         searchBar.addEventListener('click', () => {
             searchBar.classList.add('expanded');
@@ -2718,9 +2931,13 @@
             
             if (query.length < 2) {
                 searchResults.classList.remove('active');
+                searchHistory.classList.remove('hidden');
+                displaySearchHistory();
                 return;
             }
 
+            // Hide search history while searching
+            searchHistory.classList.add('hidden');
             searchResults.classList.add('active');
 
             searchTimeout = setTimeout(async () => {
@@ -2735,19 +2952,22 @@
 
                     if (!response.ok) {
                         searchResults.classList.remove('active');
+                        searchHistory.classList.remove('hidden');
                         return;
                     }
 
                     const data = await response.json();
                     if (Array.isArray(data) && data.length > 0) {
-                        displaySearchResults(data);
+                        displaySearchResults(data, query);
                     } else if (data.videos && Array.isArray(data.videos) && data.videos.length > 0) {
-                        displaySearchResults(data.videos);
+                        displaySearchResults(data.videos, query);
                     } else {
                         searchResults.classList.remove('active');
+                        searchHistory.classList.remove('hidden');
                     }
                 } catch (error) {
                     searchResults.classList.remove('active');
+                    searchHistory.classList.remove('hidden');
                 }
             }, 300);
         });
@@ -2756,14 +2976,20 @@
         document.addEventListener('click', (e) => {
             if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
                 searchResults.classList.remove('active');
+                if (searchInput.value.trim().length < 2) {
+                    searchHistory.classList.remove('hidden');
+                }
             }
         });
 
-        function displaySearchResults(results) {
+        function displaySearchResults(results, query) {
             if (!results || !Array.isArray(results) || results.length === 0) {
                 searchResults.classList.remove('active');
+                searchHistory.classList.remove('hidden');
                 return;
             }
+
+            // Note: We now save tracks when they are played, not search queries
 
             searchResults.innerHTML = '';
             const resultList = document.createElement('ul');
@@ -2787,6 +3013,7 @@
                     
                     playVideo(video);
                     searchResults.classList.remove('active');
+                    searchHistory.classList.remove('hidden');
                     searchInput.value = '';
                     searchBar.classList.remove('expanded');
                 });
@@ -2800,8 +3027,9 @@
 
 
         async function playVideo(video) {
+            console.log('🎵 playVideo called with:', video);
             if (!video || !video.id) {
-                console.error('No video data provided');
+                console.error('❌ No video data provided');
                 return;
             }
 
@@ -2810,6 +3038,9 @@
             }
 
             currentVideoId = video.id;
+
+            // Save track to search history when played
+            saveTrackToHistory(video);
 
             // Update current track index if this video is in the current playlist
             if (currentPlaylist.length > 0) {
@@ -2853,7 +3084,6 @@
             }
             
             localStorage.setItem('recents', JSON.stringify(recents));
-            updateRecentsList();
 
             // If current playlist is recents, update it with the new recents list
             if (currentPlaylist.length > 0 && currentPlaylist[0]?.timestamp) {
@@ -3404,6 +3634,17 @@
             const homePage = document.querySelector('.home-page');
             const searchPage = document.querySelector('.search-page');
             const libraryPage = document.querySelector('.library-page');
+            
+            // Initialize playlists on page load
+            updatePlaylistsList();
+            
+            // Add test playlist if no playlists exist (for debugging)
+            setTimeout(() => {
+                const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
+                if (playlists.length === 0) {
+                    console.log('No playlists found, this is normal for first time users');
+                }
+            }, 500);
 
             homeButton.addEventListener('click', () => {
                 homeButton.classList.add('active');
@@ -3421,6 +3662,12 @@
                 homePage.classList.remove('active');
                 searchPage.classList.add('active');
                 libraryPage.classList.remove('active');
+                
+                // Show search history when opening search page
+                if (searchInput.value.trim().length < 2) {
+                    searchHistory.classList.remove('hidden');
+                    displaySearchHistory();
+                }
             });
 
             libraryButton.addEventListener('click', () => {
@@ -3430,6 +3677,9 @@
                 homePage.classList.remove('active');
                 searchPage.classList.remove('active');
                 libraryPage.classList.add('active');
+                
+                // Load playlists when opening library
+                updatePlaylistsList();
             });
         });
 
@@ -3457,120 +3707,10 @@
             e.stopPropagation();
         });
 
-        // Add this function to update recents list
-        function updateRecentsList() {
-            const recentsList = document.getElementById('recentsList');
-            const expandButton = document.getElementById('recentsExpandButton');
-            const recents = JSON.parse(localStorage.getItem('recents') || '[]');
-            
-            // Limit to maximum 12 tracks
-            const limitedRecents = recents.slice(0, 12);
-            
-            recentsList.innerHTML = limitedRecents.map(track => `
-                <div class="recent-item" data-track='${JSON.stringify(track)}' onclick="playRecentTrack(this)">
-                    <img src="${track.thumbnail}" alt="${track.title}">
-                    <div class="recent-item-title">${track.title}</div>
-                    <div class="recent-item-artist">${track.channel}</div>
-                </div>
-            `).join('');
-            
-            // Check if we need to show expand button
-            checkRecentsOverflow();
-        }
+        // Recents functionality removed as requested
 
-        function checkRecentsOverflow() {
-            const recentsList = document.getElementById('recentsList');
-            const expandButton = document.getElementById('recentsExpandButton');
-            const collapseButton = document.getElementById('recentsCollapseButton');
-            
-            // Reset to collapsed state to measure
-            recentsList.classList.remove('expanded');
-            collapseButton.style.display = 'none';
-            
-            // Count number of tracks
-            const trackCount = recentsList.children.length;
-            
-            // Show expand button if more than 3 tracks
-            if (trackCount > 3) {
-                expandButton.style.display = 'flex';
-            } else {
-                expandButton.style.display = 'none';
-            }
-        }
-
-        function expandRecents() {
-            const recentsList = document.getElementById('recentsList');
-            const expandButton = document.getElementById('recentsExpandButton');
-            const collapseButton = document.getElementById('recentsCollapseButton');
-            
-            recentsList.classList.add('expanded');
-            expandButton.style.display = 'none';
-            collapseButton.style.display = 'flex';
-        }
-
-        function collapseRecents() {
-            const recentsList = document.getElementById('recentsList');
-            const expandButton = document.getElementById('recentsExpandButton');
-            const collapseButton = document.getElementById('recentsCollapseButton');
-            
-            recentsList.classList.remove('expanded');
-            collapseButton.style.display = 'none';
-            
-            // Only show expand button if there are more than 3 tracks
-            const trackCount = recentsList.children.length;
-            if (trackCount > 3) {
-                expandButton.style.display = 'flex';
-            } else {
-                expandButton.style.display = 'none';
-            }
-            
-            // Scroll back to recents title
-            document.querySelector('.recents-title').scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-            });
-        }
-
-        function playRecentTrack(element) {
-            const trackData = JSON.parse(element.getAttribute('data-track'));
-            
-            // Set current playlist to recents
-            const recents = JSON.parse(localStorage.getItem('recents') || '[]');
-            const trackIndex = recents.findIndex(track => track.id === trackData.id);
-            setCurrentPlaylist(recents, trackIndex !== -1 ? trackIndex : 0);
-            
-            playVideo(trackData);
-            
-            // Відразу показуємо міні-плеєр
-            document.querySelector('.mini-player').classList.add('active');
-            
-            // Відтворюємо відео
-            if (isPlayerReady && player) {
-                try {
-                    player.cueVideoById(trackData.id);
-                    player.playVideo();
-                    document.querySelector('.video-background').classList.add('active');
-                } catch (error) {
-                    console.error('Error playing video:', error);
-                }
-            }
-        }
-
-        // Call updateRecentsList when page loads
+        // Removed recents functionality as requested
         document.addEventListener('DOMContentLoaded', () => {
-            updateRecentsList();
-            
-            // Setup recents expand/collapse buttons
-            const recentsExpandButton = document.getElementById('recentsExpandButton');
-            const recentsCollapseButton = document.getElementById('recentsCollapseButton');
-            
-            if (recentsExpandButton) {
-                recentsExpandButton.addEventListener('click', expandRecents);
-            }
-            
-            if (recentsCollapseButton) {
-                recentsCollapseButton.addEventListener('click', collapseRecents);
-            }
             
             // Create test playlist if none exist
             const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
@@ -3632,10 +3772,7 @@
 
             }, 500);
             
-            // Check overflow on window resize
-            window.addEventListener('resize', () => {
-                setTimeout(checkRecentsOverflow, 100);
-            });
+            // Removed recents overflow check
         });
 
         // Add this to your existing JavaScript
@@ -4165,14 +4302,211 @@
             }
         }
 
+        // Playlist search and sorting functions
+        let originalPlaylistTracks = [];
+        let currentPlaylistData = null;
+
+        function initPlaylistControls() {
+            const searchInput = document.getElementById('playlistSearchInput');
+            const clearSearchBtn = document.getElementById('clearPlaylistSearch');
+            const sortBtn = document.getElementById('sortTracksBtn');
+            const deleteBtn = document.getElementById('deletePlaylistBtn');
+
+            // Search functionality
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                if (query) {
+                    clearSearchBtn.style.display = 'block';
+                    filterTracks(query);
+                } else {
+                    clearSearchBtn.style.display = 'none';
+                    showAllTracks();
+                }
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearSearchBtn.style.display = 'none';
+                showAllTracks();
+            });
+
+            // Sorting functionality will be handled by onclick attribute
+
+            // Delete functionality
+            deleteBtn.addEventListener('click', () => {
+                if (currentPlaylistData) {
+                    deleteCurrentPlaylist();
+                }
+            });
+        }
+
+
+
+        function filterTracks(query) {
+            if (!originalPlaylistTracks.length) return;
+
+            const filteredTracks = originalPlaylistTracks.filter(track => 
+                track.title.toLowerCase().includes(query) ||
+                track.channel.toLowerCase().includes(query)
+            );
+
+            const tracksList = document.querySelector('.playlist-tracks-list');
+            renderTracksList(tracksList, filteredTracks);
+        }
+
+        function showAllTracks() {
+            const tracksList = document.querySelector('.playlist-tracks-list');
+            renderTracksList(tracksList, originalPlaylistTracks);
+        }
+
+        function sortTracks(fromStart = true) {
+            if (!originalPlaylistTracks.length) return;
+
+            let sortedTracks;
+            if (fromStart) {
+                // Показати треки в оригінальному порядку (з початку)
+                sortedTracks = [...originalPlaylistTracks];
+            } else {
+                // Показати треки в зворотному порядку (з кінця)
+                sortedTracks = [...originalPlaylistTracks].reverse();
+            }
+
+            const tracksList = document.querySelector('.playlist-tracks-list');
+            renderTracksList(tracksList, sortedTracks);
+        }
+
+        function deleteCurrentPlaylist() {
+            if (!currentPlaylistData) return;
+
+            if (confirm('Видалити цей плейлист? Цю дію неможливо скасувати.')) {
+                const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
+                const updatedPlaylists = playlists.filter(playlist => playlist.id !== currentPlaylistData.id);
+                
+                localStorage.setItem('playlists', JSON.stringify(updatedPlaylists));
+                updatePlaylistsList();
+                
+                // Close modal
+                const modal = document.querySelector('.playlist-details-modal');
+                modal.classList.remove('active');
+                
+                // Clear Telegram buttons
+                if (window.clearTelegramPlaylistButtons) {
+                    clearTelegramPlaylistButtons();
+                }
+                
+                // Hide Back Button
+                if (window.Telegram?.WebApp?.BackButton) {
+                    window.Telegram.WebApp.BackButton.hide();
+                }
+            }
+        }
+
+        function updateShowPlaylistDetails() {
+            // Update the original showPlaylistDetails function to store data and init controls
+            const originalShowPlaylistDetails = window.showPlaylistDetails;
+            window.showPlaylistDetails = function(playlist) {
+                currentPlaylistData = playlist;
+                originalPlaylistTracks = playlist.tracks ? [...playlist.tracks] : [];
+                
+
+                
+                // Call original function
+                originalShowPlaylistDetails.call(this, playlist);
+                
+                // Initialize controls after modal is shown
+                setTimeout(() => {
+                    initPlaylistControls();
+                    
+                    // Clear search and reset sort button
+                    const searchInput = document.getElementById('playlistSearchInput');
+                    const clearSearchBtn = document.getElementById('clearPlaylistSearch');
+                    const sortBtn = document.getElementById('sortTracksBtn');
+                    
+                    if (searchInput) {
+                        searchInput.value = '';
+                        clearSearchBtn.style.display = 'none';
+                    }
+                    
+                    if (sortBtn) {
+                        sortBtn.classList.remove('desc');
+                        sortBtn.title = 'З початку';
+                        const icon = sortBtn.querySelector('.sort-icon');
+                        if (icon) icon.textContent = '1→∞';
+                    }
+                }, 100);
+            };
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateShowPlaylistDetails();
+        });
+
+        // Global function for sort button
+        function toggleSort(button) {
+            console.log('toggleSort called');
+            
+            const icon = button.querySelector('.sort-icon');
+            
+            // Toggle sort direction
+            if (button.classList.contains('desc')) {
+                // Currently from end, switch to from start
+                button.classList.remove('desc');
+                button.title = 'З початку';
+                icon.textContent = '1→∞';
+                console.log('Switched to from start');
+                sortTracks(true);
+            } else {
+                // Currently from start, switch to from end
+                button.classList.add('desc');
+                button.title = 'З кінця';
+                icon.textContent = '∞→1';
+                console.log('Switched to from end');
+                sortTracks(false);
+            }
+        }
+
+        // Playlist search expand function
+        function expandPlaylistSearch() {
+            const searchBar = document.querySelector('.playlist-search-bar');
+            const searchInput = document.getElementById('playlistSearchInput');
+            
+            if (!searchBar.classList.contains('expanded')) {
+                searchBar.classList.add('expanded');
+                setTimeout(() => {
+                    searchInput.focus();
+                }, 300);
+            }
+        }
+
+        // Close playlist search when clicking outside
+        document.addEventListener('click', (e) => {
+            const searchBar = document.querySelector('.playlist-search-bar');
+            const searchInput = document.getElementById('playlistSearchInput');
+            
+            if (searchBar && !searchBar.contains(e.target) && searchBar.classList.contains('expanded')) {
+                if (!searchInput.value) {
+                    searchBar.classList.remove('expanded');
+                }
+            }
+        });
+
 
 
         function updatePlaylistsList() {
+            console.log('Updating playlists list...');
             const container = document.getElementById('playlistsContainer');
+            
+            if (!container) {
+                console.error('Playlists container not found!');
+                return;
+            }
+            
             const playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
+            console.log('Found playlists in localStorage:', playlists.length);
 
             if (playlists.length === 0) {
-                container.innerHTML = '<div style="color: white; text-align: center; padding: 40px;">No playlists found</div>';
+                container.innerHTML = '<div style="color: white; text-align: center; padding: 40px;">Плейлисти не знайдено<br><br>Імпортуйте плейлист з YouTube або створіть новий</div>';
                 return;
             }
 
@@ -4201,7 +4535,7 @@
                 }
                 
                 return `
-                    <div class="playlist-item" data-id="${playlist.id}" onclick="showPlaylistDetails(${JSON.stringify(playlist).replace(/"/g, '&quot;')})">
+                    <div class="playlist-item" data-id="${playlist.id}" onclick="showPlaylistDetails(${JSON.stringify(playlist).replace(/"/g, '&quot;')})" style="cursor: pointer;">
                         ${coverHTML}
                         <div class="playlist-item-info">
                             <div class="playlist-item-title">${playlist.name}</div>
@@ -4210,6 +4544,22 @@
                     </div>
                 `;
             }).join('');
+            
+            // Add event listeners to playlist items as backup
+            setTimeout(() => {
+                const playlistItems = container.querySelectorAll('.playlist-item');
+                playlistItems.forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        console.log('Playlist item clicked');
+                        const playlistId = item.getAttribute('data-id');
+                        const playlist = playlists.find(p => p.id == playlistId);
+                        if (playlist) {
+                            console.log('Opening playlist:', playlist.name);
+                            showPlaylistDetails(playlist);
+                        }
+                    });
+                });
+            }, 100);
         }
 
         // Playlist management functions
@@ -4445,126 +4795,11 @@
             }
         }
 
-        // Long press functionality for recents title
-        let longPressTimer;
-        let isLongPressed = false;
+        // Removed long press functionality as recents was removed
 
 
 
-        function setupRecentsLongPress() {
-            const recentsTitle = document.getElementById('recentsTitle');
-            const recentsText = document.getElementById('recentsText');
-            const clearText = document.getElementById('clearText');
-            let isClearMode = false;
-
-            function startLongPress(e) {
-                e.preventDefault();
-                isLongPressed = false;
-                
-                longPressTimer = setTimeout(() => {
-                    isLongPressed = true;
-                }, 2000); // 2 seconds
-            }
-
-            function endLongPress(e) {
-                if (longPressTimer) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
-                }
-                
-                // Show clear text only if long press was completed
-                if (isLongPressed) {
-                    showClearText();
-                    isLongPressed = false;
-                }
-            }
-
-            function showClearText() {
-                recentsText.classList.add('hidden');
-                clearText.classList.remove('hidden');
-                isClearMode = true;
-                
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    hideClearText();
-                }, 5000);
-            }
-
-            function hideClearText() {
-                console.log('Hiding clear text, returning to recents');
-                recentsText.classList.remove('hidden');
-                clearText.classList.add('hidden');
-                isClearMode = false;
-            }
-
-            function handleClick(e) {
-                e.preventDefault();
-                
-                if (isClearMode) {
-                    console.log('Click in clear mode, showing confirmation');
-                    // Show confirmation using standard confirm dialog
-                    if (confirm('Are you sure you want to clear all recent tracks?')) {
-                        performClearRecentTracks();
-                    } else {
-                        // User cancelled, return to normal text
-                        hideClearText();
-                    }
-                }
-            }
-
-            function handleMouseDown(e) {
-                // Only start long press if not in clear mode
-                if (!isClearMode) {
-                    startLongPress(e);
-                }
-            }
-
-            function performClearRecentTracks() {
-                console.log('Performing clear recent tracks');
-                // Clear from localStorage
-                localStorage.removeItem('recentTracks');
-                localStorage.removeItem('recents');
-                
-                // Clear from UI
-                const recentsList = document.getElementById('recentsList');
-                recentsList.innerHTML = '';
-                
-                // Hide all buttons since no tracks remain
-                document.getElementById('recentsExpandButton').style.display = 'none';
-                document.getElementById('recentsCollapseButton').style.display = 'none';
-                
-                // Return to normal text
-                hideClearText();
-                
-                // Show success notification
-                showNotification('✅ Recent tracks cleared', 'success');
-            }
-
-            // Event listeners for touch and mouse
-            recentsTitle.addEventListener('mousedown', handleMouseDown);
-            recentsTitle.addEventListener('mouseup', endLongPress);
-            recentsTitle.addEventListener('mouseleave', endLongPress);
-            recentsTitle.addEventListener('touchstart', (e) => {
-                if (!isClearMode) {
-                    startLongPress(e);
-                }
-            }, { passive: false });
-            recentsTitle.addEventListener('touchend', endLongPress);
-            recentsTitle.addEventListener('touchcancel', endLongPress);
-
-            // Click handler for clear action
-            recentsTitle.addEventListener('click', handleClick);
-
-            // Click outside to hide clear text
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.recents-header')) {
-                    hideClearText();
-                }
-            });
-        }
-
-        // Initialize long press functionality when DOM is ready
-        document.addEventListener('DOMContentLoaded', setupRecentsLongPress);
+        // Removed setupRecentsLongPress function as recents functionality was removed
 
 
 
